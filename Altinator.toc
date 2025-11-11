@@ -1,0 +1,11 @@
+## Interface: 11508
+## Title: Ozafy's Altinator
+## Version: 1.0
+## Author: Ozafy
+## Notes: Shows alt things using storinator
+## DefaultState: Enabled
+## SavedVariables: AltinatorDB
+Libs\Libs.xml
+Locales\Locales.xml
+Constants.lua
+Altinator.lua
