@@ -1,6 +1,7 @@
 local L = LibStub("AceLocale-3.0"):NewLocale("Altinator", "enUS", true)
 
 L["Overview"] = "Overview"
+L["Activity"] = "Activity"
 L["Gear"] = "Gear"
 L["Search"] = "Search"
 L["Options"] = "Options"
@@ -24,6 +25,11 @@ L["ProfessionIDs"]= {
     [393] = "Skinning"
 }
 L["Totals"] = "Totals"
+L["Mail"] = "Mail"
+L["Auctions"] = "Auctions"
+L["AuctionItems"] = "Items"
+L["Played"] = "Time Played"
+L["LastLogin"] = "Last Login"
 L["Syndicator_Not_Ready"] = "Syndicator needs to be installed and enabled"
 L["GearTitle"] = "Currently equipped gear"
 L["EquipmentSlots"]= {

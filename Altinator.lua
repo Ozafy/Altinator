@@ -17,6 +17,7 @@ local AltinatorLDB = LibStub("LibDataBroker-1.1"):NewDataObject("Altinator", {
 local icon = LibStub("LibDBIcon-1.0")
 local AltinatorDB
 local AltinatorFrame
+local AltinatorTooltip
 
 local function SavePlayerData()
    local name, realm = UnitFullName("player")
@@ -120,170 +121,9 @@ local function MoneyToGoldString(money)
 	return (gold..gcoin..silver..scoin..copper..ccoin)
 end
 
-local framePool = {}
-local function Removeframe(f)
-   f:Hide()
-   tinsert(framePool, f)
-end
-
-local function Getframe()
-   local f = tremove(framePool)
-   if not f then
-      f = CreateFrame("Frame", nil, self)
-   else
-      --revert any unique changes you may have made to the frame before sticking it in the framepool
-   end
-   return f
-end
-
-local function CreateProfessionTexture(row, baseOffset, profIndex, id, profession)
-   row["Profession_"..profIndex.."_texture"] = row:CreateTexture("Profession_Icon_" .. id, "BACKGROUND")
-   row["Profession_"..profIndex.."_texture"]:SetWidth(15)
-   row["Profession_"..profIndex.."_texture"]:SetHeight(15)
-   row["Profession_"..profIndex.."_texture"]:SetPoint("TOPLEFT", baseOffset + (profIndex * 80), -6)
-   row["Profession_"..profIndex.."_texture"]:SetTexture("Interface\\ICONS\\" .. profession.File)
-
-   row["Profession_"..profIndex.."_text"] = row:CreateFontString("Profession_Text_" .. id,"ARTWORK","GameFontHighlight")
-   row["Profession_"..profIndex.."_text"]:SetPoint("LEFT", baseOffset + 20 + (profIndex * 80), -4)
-   row["Profession_"..profIndex.."_text"]:SetText(profession.Skill.."/"..profession.SkillMax)
-
-end
-
-local function LoadOverViewFrame(self)
-   local ROW_WIDTH = _WIDTH-50
-   local ROW_HEIGHT = 20
-
-   
-   local header = self.Header or CreateFrame("Frame", nil, self)
-   self.Header = header
-   header:SetSize(ROW_WIDTH, ROW_HEIGHT)
-   header:SetPoint("TOPLEFT",0, 0)
-
-   header.Name = header:CreateFontString("HeaderName", "ARTWORK", "GameFontHighlight")
-   header.Name:SetPoint("LEFT", 5, -6)
-   header.Name:SetText(L["Characters"])
-
-   header.Guild = header:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-   header.Guild:SetPoint("LEFT", 170, -6)
-   header.Guild:SetText(L["Guild"])
-
-   header.Money = header:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-   header.Money:SetPoint("LEFT", 370, -6)
-   header.Money:SetText(L["Gold"])
-
-   header.Level = header:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-   header.Level:SetPoint("LEFT", 510, -6)
-   header.Level:SetText(L["Level"])
-
-   header.Professions = header:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-   header.Professions:SetPoint("LEFT", 590, -6)
-   header.Professions:SetText(L["Professions"])
-
-   local totalCharacters = 0
-   local totalMoney = 0
-   local characters = GetRealmCharactersSorted()
-   for i, name in ipairs(characters) do
-         local char = AltinatorDB.global.characters[name]
-         local row = CreateFrame("Frame",nil,self)
-         row:SetSize(ROW_WIDTH, ROW_HEIGHT)
-         row:SetPoint("TOPLEFT", 0, -(totalCharacters + 2) * ROW_HEIGHT)
-
-         row.FactionIcon = row:CreateTexture("Faction_Icon_" .. i, "BACKGROUND")
-         row.FactionIcon:SetWidth(15)
-         row.FactionIcon:SetHeight(15)
-         row.FactionIcon:SetPoint("TOPLEFT", 5, -6)
-         local banner = "inv_bannerpvp_01"
-         if(char.Faction == "Alliance") then
-            banner = "inv_bannerpvp_02"
-         end
-         row.FactionIcon:SetTexture("Interface\\ICONS\\" .. banner)
-
-         row.RaceIcon = row:CreateTexture("Race_Icon_" .. i, "BACKGROUND")
-         row.RaceIcon:SetWidth(15)
-         row.RaceIcon:SetHeight(15)
-         row.RaceIcon:SetPoint("TOPLEFT", 20, -6)
-         row.RaceIcon:SetTexture("Interface\\ICONS\\Achievement_character_" .. char.Race.File .. "_" .. C["Genders"][char.Sex])
-
-         row.ClassIcon = row:CreateTexture("Class_Icon_" .. i, "BACKGROUND")
-         row.ClassIcon:SetWidth(15)
-         row.ClassIcon:SetHeight(15)
-         row.ClassIcon:SetPoint("TOPLEFT", 35, -6)
-         row.ClassIcon:SetTexture("Interface\\ICONS\\classicon_" .. char.Class.File)
-
-         row.Name = row:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-         row.Name:SetPoint("LEFT", 55, -4)
-         row.Name:SetText(char.Name)
-         local cr, cg, cb, web = GetClassColor(char.Class.File)
-         row.Name:SetTextColor(cr, cg, cb)
-
-         row.Name = row:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-         row.Name:SetPoint("LEFT", 170, -4)
-         if char.Guild then
-            row.Name:SetText(char.Guild.Name)
-         else
-            row.Name:SetText("")
-         end
-         
-
-         row.Name = row:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-         row.Name:SetPoint("RIGHT", "Faction_Icon_" .. i, "LEFT", 490, 0)
-         row.Name:SetText(MoneyToGoldString(char.Money))
-         totalMoney = totalMoney + char.Money
-
-         row.Name = row:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-         row.Name:SetPoint("LEFT", 510, -4)
-         local level = char.Level
-         if(level~=60) then
-            level = (("%.1f (\124cnHIGHLIGHT_LIGHT_BLUE:%d%%\124r)"):format(level + (char.XP.Current/char.XP.Needed), (char.XP.Rested/char.XP.Needed * 100)))
-         end
-         row.Name:SetText(level)
-
-         local profIndex = 0;
-         for id, profession in pairs(char.Professions) do
-            CreateProfessionTexture(row, 590, profIndex, id, profession)
-            profIndex = profIndex+1
-         end
-         for id, profession in pairs(char.ProfessionsSecondairy) do
-            CreateProfessionTexture(row, 590, profIndex, id, profession)
-            profIndex = profIndex+1
-         end
-
-         row:Show()
-
-         totalCharacters = totalCharacters + 1
-   end
-
-   local totals = self.Totals or CreateFrame("Frame", nil, self)
-   self.Totals = totals
-   totals:SetSize(ROW_WIDTH, ROW_HEIGHT)
-   totals:SetPoint("TOPLEFT", 0, -(totalCharacters + 3) * ROW_HEIGHT)
-
-   totals.Name = totals:CreateFontString("TotalsName", "ARTWORK", "GameFontHighlight")
-   totals.Name:SetPoint("LEFT", 5, -6)
-   totals.Name:SetText(L["Totals"])
-
-   totals.Guild = totals:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-   totals.Guild:SetPoint("LEFT", 170, -6)
-   totals.Guild:SetText("")
-
-   totals.Money = totals:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-   totals.Money:SetPoint("RIGHT", "TotalsName", "LEFT", 490, 0)
-   totals.Money:SetText(MoneyToGoldString(totalMoney))
-
-   totals.Level = totals:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-   totals.Level:SetPoint("LEFT", 510, -6)
-   totals.Level:SetText("")
-
-   totals.Professions = totals:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-   totals.Professions:SetPoint("LEFT", 590, -6)
-   totals.Professions:SetText("")
-
-   self:SetSize(_WIDTH-42, ROW_HEIGHT * (totalCharacters + 2))
-end
-
 local function CreateInnerBorder(frame, itemQuality)
-   if frame.iborder then return end
-   frame.iborder = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+   local iborder = frame.iborder or CreateFrame("Frame", nil, frame, "BackdropTemplate")
+   frame.iborder = iborder
    frame.iborder:SetPoint("TOPLEFT", 1, -1)
    frame.iborder:SetPoint("BOTTOMRIGHT", -1, 1)
    frame.iborder:SetFrameLevel(frame:GetFrameLevel())
@@ -296,29 +136,236 @@ local function CreateInnerBorder(frame, itemQuality)
 	return frame.iborder
 end
 
+local function CreateProfessionTexture(contentFrame, anchor, baseOffset, profIndex, id, profession)
+   local professionTexture = contentFrame:CreateTexture("Profession_Icon_" .. id, "BACKGROUND")
+   professionTexture:SetWidth(15)
+   professionTexture:SetHeight(15)
+   professionTexture:SetPoint("LEFT", anchor,"LEFT", baseOffset + (profIndex * 80), 0)
+   professionTexture:SetTexture("Interface\\ICONS\\" .. profession.File)
+
+   local professionText = contentFrame:CreateFontString("Profession_Text_" .. id, "ARTWORK", "GameFontHighlight")
+   professionText:SetPoint("LEFT", anchor, "LEFT", baseOffset + 20 + (profIndex * 80), 0)
+   professionText:SetText(profession.Skill.."/"..profession.SkillMax)
+end
+
+local function LoadOverViewFrame(self)
+   local ICON_HEIGHT = 15
+   local ROW_HEIGHT = ICON_HEIGHT + 5
+
+   local nameHeader = self:CreateFontString("HeaderName", "ARTWORK", "GameFontHighlight")
+   nameHeader:SetPoint("TOPLEFT", 5, -10)
+   nameHeader:SetText(L["Characters"])
+
+   local guildHeader = self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+   guildHeader:SetPoint("LEFT", nameHeader, "LEFT", 165, 0)
+   guildHeader:SetText(L["Guild"])
+
+   local moneyHeader = self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+   moneyHeader:SetPoint("LEFT", guildHeader, "LEFT", 200, 0)
+   moneyHeader:SetText(L["Gold"])
+
+   local levelHeader = self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+   levelHeader:SetPoint("LEFT", moneyHeader, "LEFT", 140, 0)
+   levelHeader:SetText(L["Level"])
+
+   local professionsHeader = self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+   professionsHeader:SetPoint("LEFT", levelHeader, "LEFT", 80, 0)
+   professionsHeader:SetText(L["Professions"])
+
+   local totalCharacters = 0
+   local totalMoney = 0
+   local characters = GetRealmCharactersSorted()
+   for i, name in ipairs(characters) do
+      local char = AltinatorDB.global.characters[name]
+      local factionIcon = self:CreateTexture("Faction_Icon_" .. i, "BACKGROUND")
+      factionIcon:SetSize(ICON_HEIGHT, ICON_HEIGHT)
+      factionIcon:SetPoint("TOPLEFT", nameHeader, "BOTTOMLEFT", 0, ROW_HEIGHT * -1 * (totalCharacters+1))
+      local banner = "inv_bannerpvp_01"
+      if(char.Faction == "Alliance") then
+         banner = "inv_bannerpvp_02"
+      end
+      factionIcon:SetTexture("Interface\\ICONS\\" .. banner)
+
+      local raceIcon = self:CreateTexture("Race_Icon_" .. i, "BACKGROUND")
+      raceIcon:SetSize(ICON_HEIGHT, ICON_HEIGHT)
+      raceIcon:SetPoint("LEFT", factionIcon, "LEFT", 15, 0)
+      raceIcon:SetTexture("Interface\\ICONS\\Achievement_character_" .. char.Race.File .. "_" .. C["Genders"][char.Sex])
+
+      local classIcon = self:CreateTexture("Class_Icon_" .. i, "BACKGROUND")
+      classIcon:SetSize(ICON_HEIGHT, ICON_HEIGHT)
+      classIcon:SetPoint("LEFT", raceIcon, "LEFT", 15, 0)
+      classIcon:SetTexture("Interface\\ICONS\\classicon_" .. char.Class.File)
+
+      local charName = self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+      charName:SetPoint("LEFT", classIcon, "LEFT", 20, 0)
+      charName:SetText(char.Name)
+      local cr, cg, cb, web = GetClassColor(char.Class.File)
+      charName:SetTextColor(cr, cg, cb)
+
+      local guildName = self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+      guildName:SetPoint("LEFT", factionIcon, "LEFT", 165, 0)
+      if char.Guild then
+         guildName:SetText(char.Guild.Name)
+      else
+         guildName:SetText("")
+      end
+      
+
+      local moneyText = self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+      moneyText:SetPoint("RIGHT", factionIcon, "LEFT", 495, 0)
+      moneyText:SetText(MoneyToGoldString(char.Money))
+      totalMoney = totalMoney + char.Money
+
+      local levelText = self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+      levelText:SetPoint("LEFT", factionIcon, "LEFT", 505, 0)
+      local level = char.Level
+      if(level~=60) then
+         level = (("%.1f (\124cnHIGHLIGHT_LIGHT_BLUE:%d%%\124r)"):format(level + (char.XP.Current/char.XP.Needed), (char.XP.Rested/char.XP.Needed * 100)))
+      end
+      levelText:SetText(level)
+
+      local profIndex = 0;
+      for id, profession in pairs(char.Professions) do
+         CreateProfessionTexture(self, factionIcon, 585, profIndex, id, profession)
+         profIndex = profIndex+1
+      end
+      for id, profession in pairs(char.ProfessionsSecondairy) do
+         CreateProfessionTexture(self, factionIcon, 585, profIndex, id, profession)
+         profIndex = profIndex+1
+      end
+      totalCharacters = totalCharacters + 1
+   end
+
+   local totalName = self:CreateFontString("TotalsName", "ARTWORK", "GameFontHighlight")
+   totalName:SetPoint("TOPLEFT", nameHeader, "BOTTOMLEFT", 0, ROW_HEIGHT * -1 * (totalCharacters+2))
+   totalName:SetText(L["Totals"])
+
+   local totalMoneyString = self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+   totalMoneyString:SetPoint("RIGHT", totalName, "LEFT", 495, 0)
+   totalMoneyString:SetText(MoneyToGoldString(totalMoney))
+
+   self:SetSize(_WIDTH - 50, ROW_HEIGHT * (totalCharacters + 3))
+end
+
+local function LoadActivityViewFrame(self)
+   if Syndicator and Syndicator.API.IsReady() then
+      local ICON_HEIGHT = 15
+      local ROW_HEIGHT = ICON_HEIGHT + 5
+
+      local nameHeader = self:CreateFontString("HeaderName", "ARTWORK", "GameFontHighlight")
+      nameHeader:SetPoint("TOPLEFT", 5, -10)
+      nameHeader:SetText(L["Characters"])
+
+      local mailHeader = self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+      mailHeader:SetPoint("LEFT", nameHeader, "LEFT", 165, 0)
+      mailHeader:SetText(L["Mail"])
+
+      local auctionsHeader = self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+      auctionsHeader:SetPoint("LEFT", mailHeader, "LEFT", 100, 0)
+      auctionsHeader:SetText(L["Auctions"])
+
+      local playedHeader = self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+      playedHeader:SetPoint("LEFT", auctionsHeader, "LEFT", 140, 0)
+      playedHeader:SetText(L["Played"])
+
+      local lastLoginHeader = self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+      lastLoginHeader:SetPoint("LEFT", playedHeader, "LEFT", 80, 0)
+      lastLoginHeader:SetText(L["LastLogin"])
+
+      local totalCharacters = 0
+      local totalMail = 0
+      local totalAuctions = 0
+      local totalAuctionItems = 0
+      local totalPlayed = 0
+      local characters = GetRealmCharactersSorted()
+      for i, name in ipairs(characters) do
+         local char = AltinatorDB.global.characters[name]
+         local charSyndicator = Syndicator.API.GetByCharacterFullName(name)
+         if charSyndicator then
+            local factionIcon = self:CreateTexture("Faction_Icon_" .. i, "BACKGROUND")
+            factionIcon:SetSize(ICON_HEIGHT, ICON_HEIGHT)
+            factionIcon:SetPoint("TOPLEFT", nameHeader, "BOTTOMLEFT", 0, ROW_HEIGHT * -1 * (totalCharacters+1))
+            local banner = "inv_bannerpvp_01"
+            if(char.Faction == "Alliance") then
+               banner = "inv_bannerpvp_02"
+            end
+            factionIcon:SetTexture("Interface\\ICONS\\" .. banner)
+
+            local raceIcon = self:CreateTexture("Race_Icon_" .. i, "BACKGROUND")
+            raceIcon:SetSize(ICON_HEIGHT, ICON_HEIGHT)
+            raceIcon:SetPoint("LEFT", factionIcon, "LEFT", 15, 0)
+            raceIcon:SetTexture("Interface\\ICONS\\Achievement_character_" .. char.Race.File .. "_" .. C["Genders"][char.Sex])
+
+            local classIcon = self:CreateTexture("Class_Icon_" .. i, "BACKGROUND")
+            classIcon:SetSize(ICON_HEIGHT, ICON_HEIGHT)
+            classIcon:SetPoint("LEFT", raceIcon, "LEFT", 15, 0)
+            classIcon:SetTexture("Interface\\ICONS\\classicon_" .. char.Class.File)
+
+            local charName = self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+            charName:SetPoint("LEFT", classIcon, "LEFT", 20, 0)
+            charName:SetText(char.Name)
+            local cr, cg, cb, web = GetClassColor(char.Class.File)
+            charName:SetTextColor(cr, cg, cb)
+
+            local mailText = self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+            mailText:SetPoint("LEFT", factionIcon, "LEFT", 165, 0)
+            mailText:SetText("NYI")
+
+            local auctionCount = 0
+            local auctionItems = 0
+            for j, auction in pairs(charSyndicator["auctions"]) do
+               if auction["itemCount"]>0 then
+                  auctionCount = auctionCount + 1
+                  auctionItems = auctionItems + auction["itemCount"]
+               end
+            end
+            local auctionText = self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+            auctionText:SetPoint("LEFT", factionIcon, "LEFT", 265, 0)
+            auctionText:SetText(auctionCount .. " (" .. auctionItems .. " " .. L["AuctionItems"] .. ")")
+
+            totalCharacters = totalCharacters + 1
+         end
+      end
+
+      local totalName = self:CreateFontString("TotalsName", "ARTWORK", "GameFontHighlight")
+      totalName:SetPoint("TOPLEFT", nameHeader, "BOTTOMLEFT", 0, ROW_HEIGHT * -1 * (totalCharacters+2))
+      totalName:SetText(L["Totals"])
+
+      local totalMailString = self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+      totalMailString:SetPoint("LEFT", totalName, "LEFT", 165, 0)
+      totalMailString:SetText(totalMail)
+
+      local totalAuctionsString = self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+      totalAuctionsString:SetPoint("LEFT", totalName, "LEFT", 265, 0)
+      totalAuctionsString:SetText(totalAuctions .. " (" .. totalAuctionItems .. " " .. L["AuctionItems"] .. ")")
+
+      self:SetSize(_WIDTH - 50, ROW_HEIGHT * (totalCharacters + 3))
+   else
+      local noDataFrame = self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+      noDataFrame:SetPoint("CENTER", 0, 0)
+      noDataFrame:SetText(L["Syndicator_Not_Ready"])
+
+      self:SetSize(_WIDTH-42, _HEIGHT -50)
+   end
+end
+
 local function LoadGearViewFrame(self)
    if Syndicator and Syndicator.API.IsReady() then
       local ROW_WIDTH = _WIDTH-50
       local ROW_HEIGHT = 40
       local ICON_SIZE = 32
-
-      local header = self.Header or CreateFrame("Frame", nil, self)
-      self.Header = header
-      header:SetSize(ROW_WIDTH, ROW_HEIGHT)
-      header:SetPoint("TOPLEFT", 0, 0)
-
-      header.Name = header:CreateFontString("HeaderName", "ARTWORK", "GameFontHighlight")
-      header.Name:SetPoint("CENTER", 0, -6)
-      header.Name:SetText(L["GearTitle"])
-
-      local emptyIconRow = CreateFrame("Frame", nil, self)
-      emptyIconRow:SetSize(ROW_WIDTH, ROW_HEIGHT)
-      emptyIconRow:SetPoint("TOPLEFT", 0, -1 * ROW_HEIGHT)
+      if not self.Frames then
+         self.Frames = {}
+      end
+      local header = self:CreateFontString("HeaderName", "ARTWORK", "GameFontHighlight")
+      header:SetPoint("TOPLEFT", 5, -10)
+      header:SetText(L["GearTitle"])
 
       for s=1,19 do
-         local emptyTextureFrame = CreateFrame("Frame", nil, emptyIconRow)
+         local emptyTextureFrame = self.Frames["EmptyTextureFrame" .. s] or CreateFrame("Frame", nil, self)
+         self.Frames["EmptyTextureFrame" .. s] = emptyTextureFrame
          emptyTextureFrame:SetSize(ICON_SIZE, ICON_SIZE)
-         emptyTextureFrame:SetPoint("TOPLEFT", ((s+1)*(ICON_SIZE+8))+96, 0)
+         emptyTextureFrame:SetPoint("LEFT", header, "LEFT", ((s+1)*(ICON_SIZE+8))+96, 0)
          CreateInnerBorder(emptyTextureFrame, 6)
 
          local emptyTexture = emptyTextureFrame:CreateTexture(nil, "BACKGROUND")
@@ -326,14 +373,13 @@ local function LoadGearViewFrame(self)
          emptyTexture:SetPoint("CENTER")
          emptyTexture:SetTexture(C:GetEquipmentSlotIcon(s))
 
-         emptyTextureFrame.Tooltip = CreateFrame("GameTooltip", "emptyTextureFrame"..s, AltinatorFrame, "GameTooltipTemplate")
-         emptyTextureFrame.Tooltip.Text = L["EquipmentSlots"][s]
+         emptyTextureFrame.TooltipText = L["EquipmentSlots"][s]
          emptyTextureFrame:SetScript("OnEnter", function(self)
-            self.Tooltip:SetOwner(self, "ANCHOR_CURSOR")
-            self.Tooltip:SetText(self.Tooltip.Text)
+            AltinatorTooltip:SetOwner(self, "ANCHOR_CURSOR")
+            AltinatorTooltip:SetText(self.TooltipText)
          end)
          emptyTextureFrame:SetScript("OnLeave", function(self)
-            self.Tooltip:Hide()
+            AltinatorTooltip:Hide()
          end)
       end
 
@@ -344,26 +390,24 @@ local function LoadGearViewFrame(self)
             local charSyndicator = Syndicator.API.GetByCharacterFullName(name)
             if (charSyndicator) then
                local equipment = charSyndicator["equipped"]
-               local row = CreateFrame("Frame", nil, self)
-               row:SetSize(ROW_WIDTH, ROW_HEIGHT)
-               row:SetPoint("TOPLEFT", 0, -(totalCharacters + 2) * ROW_HEIGHT)
 
-               local classFrame = row:CreateTexture(nil, "BACKGROUND")
+               local classFrame = self:CreateTexture(nil, "BACKGROUND")
                classFrame:SetSize(ICON_SIZE, ICON_SIZE)
-               classFrame:SetPoint("TOPLEFT", 5, 0)
+               classFrame:SetPoint("LEFT", header, "LEFT", 0, (ROW_HEIGHT * -1 * (totalCharacters+1)) - ROW_HEIGHT)
                classFrame:SetTexture("Interface\\ICONS\\classicon_" .. char.Class.File)
-
-               row.Name = row:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-               row.Name:SetPoint("LEFT", 45, 0)
-               row.Name:SetText(char.Name)
+               
+               local charName = self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+               charName:SetPoint("LEFT", classFrame, "LEFT", ICON_SIZE + 10, 0)
+               charName:SetText(char.Name)
                local cr, cg, cb, web = GetClassColor(char.Class.File)
-               row.Name:SetTextColor(cr, cg, cb)
+               charName:SetTextColor(cr, cg, cb)
 
                for j, item in pairs(equipment) do
                   if item then
-                     local textureFrame = CreateFrame("Frame", nil, row)
+                     local textureFrame = self.Frames["item" .. totalCharacters .. j] or CreateFrame("Frame", nil, self)
+                     self.Frames["item" .. totalCharacters .. j] = textureFrame
                      textureFrame:SetSize(ICON_SIZE, ICON_SIZE)
-                     textureFrame:SetPoint("TOPLEFT", (j*(ICON_SIZE+8))+96, 0)
+                     textureFrame:SetPoint("LEFT", classFrame, "LEFT", (j*(ICON_SIZE+8))+96, 0)
                      if item["quality"] then
                         CreateInnerBorder(textureFrame, item["quality"])
                      end
@@ -377,19 +421,18 @@ local function LoadGearViewFrame(self)
                      end
 
                      if item["quality"] then
-                        textureFrame.Tooltip = CreateFrame("GameTooltip", "GearOverViewTooltip"..i..j, AltinatorFrame, "GameTooltipTemplate")
-                        textureFrame.Tooltip.ItemLink = item["itemLink"]
+                        textureFrame.TooltipItemLink = item["itemLink"]
                         textureFrame:SetScript("OnEnter", function(self)
-                           self.Tooltip:SetOwner(self, "ANCHOR_CURSOR")
-                           self.Tooltip:SetHyperlink(self.Tooltip.ItemLink)
+                           AltinatorTooltip:SetOwner(self, "ANCHOR_CURSOR")
+                           AltinatorTooltip:SetHyperlink(self.TooltipItemLink)
                         end)
                         textureFrame:SetScript("OnLeave", function(self)
-                           self.Tooltip:Hide()
+                           AltinatorTooltip:Hide()
                         end)
                      end
                   end
                end
-               row:Show()
+
                totalCharacters = totalCharacters + 1
             end
 
@@ -397,51 +440,79 @@ local function LoadGearViewFrame(self)
       end
       self:SetSize(_WIDTH-42, ROW_HEIGHT * (totalCharacters + 2))
    else
-      local noDataFrame = CreateFrame("Frame", nil, self)
-      noDataFrame:SetSize(ROW_WIDTH, ROW_HEIGHT)
-      noDataFrame:SetPoint("CENTER",0, 0)
+      local noDataFrame = self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+      noDataFrame:SetPoint("CENTER", 0, 0)
+      noDataFrame:SetText(L["Syndicator_Not_Ready"])
 
-      noDataFrame.Text = noDataFrame:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-      noDataFrame.Text:SetPoint("CENTER", 0, 0)
-      noDataFrame.Text:SetText(L["Syndicator_Not_Ready"])
-
-      self:SetSize(_WIDTH-42, ROW_HEIGHT * 1)
+      self:SetSize(_WIDTH-42, _HEIGHT -50)
    end
 end
 
 local function SearchResult(result)
    local frame = _G["searchResult"]
+   frame.Frames = frame.Frames or {}
    local totalResults = 0
    local ICON_SIZE = 32
    local ROW_HEIGHT = 40
+   for i, f in pairs(frame.Frames) do
+      f:Hide()
+   end
    for i, item in pairs(result) do
-      local textureFrame = CreateFrame("Frame", nil, frame)
-      textureFrame:SetSize(ICON_SIZE, ICON_SIZE)
-      textureFrame:SetPoint("TOPLEFT", (i*(ICON_SIZE+8))+96, 0)
-      if item["quality"] then
+      local char = AltinatorDB.global.characters[item["source"]["character"]]
+      if char then
+         local itemName, _, _, _, _, _, _, _, _, itemTexture = GetItemInfo(item["itemID"])
+         local textureFrame = frame.Frames[i] or CreateFrame("Frame", nil, frame)
+         frame.Frames[i] = textureFrame
+         textureFrame.Frames = textureFrame.Frames or {}
+         textureFrame:Show()
+         textureFrame:SetSize(ICON_SIZE, ICON_SIZE)
+         textureFrame:SetPoint("TOPLEFT", 5, (ROW_HEIGHT * -1 * totalResults))
          CreateInnerBorder(textureFrame, item["quality"])
-      end
-      local texture = textureFrame:CreateTexture(nil, "BACKGROUND")
-      texture:SetSize(ICON_SIZE, ICON_SIZE)
-      texture:SetPoint("CENTER")
-      if item["iconTexture"] then
-         texture:SetTexture(item["iconTexture"])
-      else
-         texture:SetTexture(C:GetEquipmentSlotIcon(i-1))
-      end
+         local texture = textureFrame.Frames["texture"] or textureFrame:CreateTexture(nil, "BACKGROUND")
+         textureFrame.Frames["texture"] = texture
+         texture:SetSize(ICON_SIZE, ICON_SIZE)
+         texture:SetPoint("CENTER")
+         if itemTexture then
+            texture:SetTexture(itemTexture)
+         else
+            texture:SetTexture(136235)
+         end
 
-      if item["quality"] then
-         textureFrame.Tooltip = CreateFrame("GameTooltip", "SearchResultTooltip"..i, AltinatorFrame, "GameTooltipTemplate")
-         textureFrame.Tooltip.ItemLink = item["itemLink"]
+         textureFrame.TooltipItemLink = item["itemLink"]
          textureFrame:SetScript("OnEnter", function(self)
-            self.Tooltip:SetOwner(self, "ANCHOR_CURSOR")
-            self.Tooltip:SetHyperlink(self.Tooltip.ItemLink)
+            AltinatorTooltip:SetOwner(self, "ANCHOR_CURSOR")
+            AltinatorTooltip:SetHyperlink(self.TooltipItemLink)
          end)
          textureFrame:SetScript("OnLeave", function(self)
-            self.Tooltip:Hide()
+            AltinatorTooltip:Hide()
          end)
+
+         local itemNameString = textureFrame.Frames["itemNameString"] or textureFrame:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+         textureFrame.Frames["itemNameString"] = itemNameString
+         itemNameString:SetPoint("LEFT", texture, "LEFT", ICON_SIZE + 10, 0)
+         local r, g, b, _ = C_Item.GetItemQualityColor(item["quality"])
+         itemNameString:SetText(itemName)
+         itemNameString:SetTextColor(r, g, b)
+
+         local charName = textureFrame.Frames["charName"] or textureFrame:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+         textureFrame.Frames["charName"] = charName
+         charName:SetPoint("LEFT", texture, "LEFT", ICON_SIZE + 300, 0)
+         charName:SetText(char.Name)
+         local r, g, b, _ = GetClassColor(char.Class.File)
+         charName:SetTextColor(r, g, b)
+
+         local itemLocationString = textureFrame.Frames["itemLocationString"] or textureFrame:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+         textureFrame.Frames["itemLocationString"] = itemLocationString
+         itemLocationString:SetPoint("LEFT", texture, "LEFT", ICON_SIZE + 450, 0)
+         itemLocationString:SetText(item["source"]["container"])
+
+         local itemLocationString = textureFrame.Frames["itemLocationString"] or textureFrame:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+         textureFrame.Frames["itemLocationString"] = itemLocationString
+         itemLocationString:SetPoint("LEFT", texture, "LEFT", ICON_SIZE + 550, 0)
+         itemLocationString:SetText(item["itemCount"])
+
+         totalResults = totalResults + 1
       end
-      totalResults = totalResults + 1
    end
    frame:SetSize(_WIDTH-50, ROW_HEIGHT * (totalResults + 2))
 end
@@ -454,18 +525,14 @@ local function LoadSearchViewFrame(self)
    local ROW_WIDTH = _WIDTH-50
    local ROW_HEIGHT = 20
    if Syndicator and Syndicator.API.IsReady() then
+      local header = self:CreateFontString("SearchTitle", "ARTWORK", "GameFontHighlight")
+      header:SetPoint("TOPLEFT", 5, -10)
+      header:SetText(L["SearchLabel"])
 
-      local header = CreateFrame("Frame", nil, self)
-      header:SetSize(ROW_WIDTH, ROW_HEIGHT)
-      header:SetPoint("TOPLEFT", 0, 0)
-
-      header.Title = header:CreateFontString("SearchTitle", "ARTWORK", "GameFontHighlight")
-      header.Title:SetPoint("LEFT", 5, -6)
-      header.Title:SetText(L["SearchLabel"])
-
-      local search = CreateFrame("EditBox", nil, self, "InputBoxTemplate")
+      local search = self.SearchBox or CreateFrame("EditBox", nil, self, "InputBoxTemplate")
+      self.SearchBox = search
       search:SetSize(300, ROW_HEIGHT)
-      search:SetPoint("LEFT", header.Title, "TOPRIGHT", 15, -6)
+      search:SetPoint("LEFT", header, "RIGHT", 15, 0)
       search:SetAutoFocus(false);
       search:SetMultiLine(false);
       search:SetScript("OnKeyUp", function(self, key)
@@ -475,7 +542,8 @@ local function LoadSearchViewFrame(self)
          end
       end)
 
-      local searchButton = CreateFrame("Button", nil, self, "GameMenuButtonTemplate");
+      local searchButton = self.SearchButton or CreateFrame("Button", nil, self, "GameMenuButtonTemplate");
+      self.SearchButton = searchButton
       searchButton:SetPoint("LEFT", search, "RIGHT", 10, 0);
       searchButton:SetSize(100, ROW_HEIGHT+2);
       searchButton:SetText(L["SearchButton"]);
@@ -486,21 +554,17 @@ local function LoadSearchViewFrame(self)
             search:ClearFocus()
       end)
 
-      local searchResult = CreateFrame("Frame", "searchResult", self)
-      searchResult:SetSize(ROW_WIDTH, ROW_HEIGHT)
-      searchResult:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 10, 0)
+      local searchResult = self.SearchResult or CreateFrame("Frame", "searchResult", self)
+      self.SearchResult = searchResult
+      searchResult:SetPoint("TOPLEFT", 0, -2 * ROW_HEIGHT)
 
       self:SetSize(_WIDTH - 42, _HEIGHT - 50)
    else
-      local noDataFrame = CreateFrame("Frame",nil,self)
-      noDataFrame:SetSize(ROW_WIDTH, ROW_HEIGHT)
-      noDataFrame:SetPoint("CENTER",0, 0)
+      local noDataFrame = self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+      noDataFrame:SetPoint("CENTER", 0, 0)
+      noDataFrame:SetText(L["Syndicator_Not_Ready"])
 
-      noDataFrame.Text = noDataFrame:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-      noDataFrame.Text:SetPoint("CENTER", 0, 0)
-      noDataFrame.Text:SetText(L["Syndicator_Not_Ready"])
-
-      self:SetSize(_WIDTH-42, ROW_HEIGHT * 1)
+      self:SetSize(_WIDTH-42, _HEIGHT -50)
    end
 end
 
@@ -538,6 +602,7 @@ local function Tab_OnClick(self)
 
    local scrollChild = AltinatorFrame.ScrollFrame:GetScrollChild()
    if(scrollChild) then
+      --scrollChild:UnloadContent()
       scrollChild:Hide()
    end
    AltinatorFrame.ScrollFrame:SetScrollChild(self.content);
@@ -575,15 +640,11 @@ end
 
 function AltinatorAddon:CreateMainFrame()
    AltinatorFrame = CreateFrame("Frame", "AltinatorFrame", UIParent, "UIPanelDialogTemplate")
-
+   AltinatorTooltip = CreateFrame("GameTooltip", "AltinatorTooltipFrame", AltinatorFrame, "GameTooltipTemplate")
    AltinatorFrame:SetSize(_WIDTH, _HEIGHT)
    AltinatorFrame:SetFrameLevel(_ZINDEX)
    AltinatorFrame:SetPoint("CENTER")
-   --AltinatorFrame.TitleBg:SetHeight(30)
-   --AltinatorFrame.title = AltinatorFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-   --AltinatorFrame.Title:ClearAllPoints()
    AltinatorFrame.Title:SetFontObject("GameFontHighlight")
-   --AltinatorFrame.Title:SetPoint("LEFT", AltinatorFrameTitleBG, "LEFT", 6, 1)
    AltinatorFrame.Title:SetText("Altinator")
    AltinatorFrameClose:ClearAllPoints()
    AltinatorFrameClose:SetPoint("TOPRIGHT", AltinatorFrameTitleBG, "TOPRIGHT", 10, 8)
@@ -614,8 +675,9 @@ function AltinatorAddon:CreateMainFrame()
    AltinatorFrame.ScrollFrame.ScrollBar:SetPoint("TOPLEFT", AltinatorFrame.ScrollFrame, "TOPRIGHT", -5, -16)
    AltinatorFrame.ScrollFrame.ScrollBar:SetPoint("BOTTOMRIGHT", AltinatorFrame.ScrollFrame, "BOTTOMRIGHT", -5, 16)
 
-   local overView, gearView, searchView, optionsView = CreateTabs(AltinatorFrame, L["Overview"], L["Gear"], L["Search"], L["Options"])
+   local overView, activityView, gearView, searchView, optionsView = CreateTabs(AltinatorFrame, L["Overview"], L["Activity"], L["Gear"], L["Search"], L["Options"])
    overView.LoadContent = LoadOverViewFrame
+   activityView.LoadContent = LoadActivityViewFrame
    gearView.LoadContent = LoadGearViewFrame
    searchView.LoadContent = LoadSearchViewFrame
    optionsView.LoadContent = LoadOptionsViewFrame
@@ -643,27 +705,6 @@ function AltinatorLDB:OnTooltipShow(tooltip)
    self:AddLine(" ")
    self:AddDoubleLine("Total", MoneyToGoldString(totalmoney))
    self:AddTexture("Interface\\Icons\\Inv_misc_coin_02")
- --[[self:AddLine("Altinator", 255, 255, 255)
- self:AddLine(" ")
- self:AddLine("Gold:")
- local totalmoney = 0
- local characterNames, characterData = GetRealmCharactersSorted()
- for _, characterName in ipairs(characterNames) do
-  local money = characterData[characterName]["money"]
-  totalmoney = totalmoney + money
-  local gold, silver, copper = MoneyToGold(money)
-  local cr, cg, cb, ca = GetClassColor(characterData[characterName]["details"]["className"])
-  self:AddDoubleLine(characterName, format("%sg %02ds %02dc", gold, silver, copper), cr, cg, cb)
-  local sex = "male"
-  if characterData[characterName]["details"]["sex"]==3 then
-   sex="female"
-  end
-  self:AddTexture("Interface\\ICONS\\Achievement_character_" .. characterData[characterName]["details"]["race"] .. "_" .. sex)
- end
- self:AddLine(" ")
- local totalgold, totalsilver, totalcopper = MoneyToGold(totalmoney)
- self:AddDoubleLine("Total", format("%sg %02ds %02dc", totalgold, totalsilver, totalcopper))
- self:AddTexture("Interface\\Icons\\Inv_misc_coin_02")]]--
 end
 
 function AltinatorLDB:OnEnter()
