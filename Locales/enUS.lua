@@ -68,3 +68,4 @@ L["EquipmentSlots"]= {
 }
 L["SearchLabel"] = "Search:"
 L["SearchButton"] = "Search"
+L["SearchNoResults"] = "No results found"
