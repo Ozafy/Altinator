@@ -107,6 +107,7 @@ local function SavePlayerDataLogout()
    data.Guild= data.Guild or {}
    data.Guild.Name=guildName
    data.Guild.Rank=guildRankName
+   data.Money = GetMoney()
    data.LastLogin = time()
    data.Resting = IsResting()
    data.XP=data.XP or{}
@@ -151,8 +152,9 @@ function AltinatorAddon:OnInitialize()
    self:RegisterEvent("MAIL_CLOSED")
 end
 
-function AltinatorAddon:PLAYER_ENTERING_WORLD(self, event, isLogin, isReload)
+function AltinatorAddon:PLAYER_ENTERING_WORLD(self, isLogin, isReload)
    if isLogin or isReload then
+      print("saving")
       SavePlayerDataLogin()
       RequestTimePlayed()
    end
