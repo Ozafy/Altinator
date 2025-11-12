@@ -133,6 +133,10 @@ function AltinatorAddon:OnInitialize()
       }
 	})
 	icon:Register("Altinator", AltinatorLDB, AltinatorDB.profile.minimap)
+   if AltinatorDB.global.dbversion ~= C["MajorDBVersion"] then
+      AltinatorDB.global.characters = {}
+      AltinatorDB.global.dbversion = C["MajorDBVersion"]
+   end
    self:RegisterEvent("PLAYER_ENTERING_WORLD")
    self:RegisterEvent("PLAYER_LOGOUT")
    self:RegisterEvent("TIME_PLAYED_MSG")

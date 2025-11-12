@@ -8,6 +8,8 @@ end})
 
 Addon.C = C
 
+C["MajorDBVersion"] = 1
+
 C["ProfessionIcons"]= {
     [129] = "spell_holy_sealofsacrifice",
     [164] = "trade_blacksmithing",
