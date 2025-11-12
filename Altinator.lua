@@ -42,7 +42,6 @@ local function SavePlayerDataLogin()
    data.Race.File=raceFile
    data.Race.Id=raceID
 
-
    local guildName, guildRankName, guildRankIndex, guildRealm = GetGuildInfo("player")
    data.Guild= data.Guild or {}
    data.Guild.Name=guildName
@@ -104,8 +103,16 @@ end
 local function SavePlayerDataLogout()
    local name, realm = UnitFullName("player")
    local data = AltinatorDB.global.characters[name .. "-" .. realm] or {}
+   local guildName, guildRankName, guildRankIndex, guildRealm = GetGuildInfo("player")
+   data.Guild= data.Guild or {}
+   data.Guild.Name=guildName
+   data.Guild.Rank=guildRankName
    data.LastLogin = time()
    data.Resting = IsResting()
+   data.XP=data.XP or{}
+   data.XP.Current=UnitXP("player")
+   data.XP.Needed=UnitXPMax("player")
+   data.XP.Rested=GetXPExhaustion()
    AltinatorDB.global.characters[name .. "-" .. realm] = data
 end
 
@@ -440,16 +447,17 @@ local function LoadOverViewFrame(self)
       self.LevelTexts[i]:SetPoint("LEFT", self.FactionIcons[i], "LEFT", 505, 0)
       local level = char.Level
       if level~=60 then
-         local RestPercent = (char.XP.Rested/char.XP.Needed * 100)
-         if RestPercent<150 then
-            local tmpRested = char.XP.Rested or 0
-            local timeResting = (time() - char.LastLogin )/3600
-            local multiplier = C["RestedXPTimeSpan"]
-            if not char.Resting then
-               multiplier = C["RestedXPTimeSpanNotResting"]
-            end
-            tmpRested = tmpRested + ((char.XP.Needed * (C["RestedXPBonus"] / multiplier * timeResting)) )
-            RestPercent = (tmpRested/char.XP.Needed * 100)
+         --local RestPercent = (char.XP.Rested/char.XP.Needed * 100)
+         local tmpRested = char.XP.Rested
+         local timeResting = (time() - (char.LastLogin) )/3600
+         local multiplier = C["RestedXPTimeSpan"]
+         if not char.Resting then
+            multiplier = C["RestedXPTimeSpanNotResting"]
+         end
+         tmpRested = tmpRested + ((char.XP.Needed * (C["RestedXPBonus"] / multiplier * timeResting)) )
+         local RestPercent = (tmpRested/char.XP.Needed * 100)
+         if RestPercent>150 then
+            RestPercent = 150
          end
          level = (("%.1f (\124cnHIGHLIGHT_LIGHT_BLUE:%d%%\124r)"):format(level + (char.XP.Current/char.XP.Needed), RestPercent))
       end
