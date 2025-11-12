@@ -19,15 +19,16 @@ local AltinatorDB
 local AltinatorFrame
 local AltinatorTooltip
 
-local function SavePlayerData()
+local function SavePlayerDataLogin()
    local name, realm = UnitFullName("player")
-   local data = {}
+   local data = AltinatorDB.global.characters[name .. "-" .. realm] or {}
    data.Name = name
    data.Realm = realm
    data.Sex = UnitSex("player")
    data.Level = UnitLevel("player")
    data.Faction = UnitFactionGroup("player")
    data.Money = GetMoney()
+   data.LastLogin = time()
 
    local className, classFilename, classId = UnitClass("player")
    data.Class={}
@@ -76,7 +77,47 @@ local function SavePlayerData()
 
     end
    end
+
+   data.Mail = data.Mail or {}
+   for i=#data.Mail,1,-1 do
+      if data.Mail[i].ExpiryTime < time() then
+         AutoReturnMail(data.Mail)
+         table.remove(data.Mail, i)
+      end
+   end
+
    AltinatorDB.global.characters[name .. "-" .. realm] = data
+end
+
+local function ClearPlayerMailData()
+   local name, realm = UnitFullName("player")
+   local data = AltinatorDB.global.characters[name .. "-" .. realm] or {}
+   data.Mail = data.Mail or {}
+   for i=#data.Mail,1,-1 do
+      if data.Mail[i].ArrivalTime < time() then
+         table.remove(data.Mail, i)
+      end
+   end
+   AltinatorDB.global.characters[name .. "-" .. realm] = data
+end
+
+local function SavePlayerDataLogout()
+   local name, realm = UnitFullName("player")
+   local data = AltinatorDB.global.characters[name .. "-" .. realm] or {}
+   data.LastLogin = time()
+   AltinatorDB.global.characters[name .. "-" .. realm] = data
+end
+
+
+local function SavePlayerTimePlayed(total, level)
+   local name, realm = UnitFullName("player")
+   if realm then
+      local data = AltinatorDB.global.characters[name .. "-" .. realm] or {}
+      data.TimePlayed = {}
+      data.TimePlayed.Total = total
+      data.TimePlayed.Level = level
+      AltinatorDB.global.characters[name .. "-" .. realm] = data
+   end
 end
 
 function AltinatorAddon:OnInitialize()
@@ -93,10 +134,109 @@ function AltinatorAddon:OnInitialize()
 	})
 	icon:Register("Altinator", AltinatorLDB, AltinatorDB.profile.minimap)
    self:RegisterEvent("PLAYER_ENTERING_WORLD")
+   self:RegisterEvent("PLAYER_LOGOUT")
+   self:RegisterEvent("TIME_PLAYED_MSG")
+   self:RegisterEvent("MAIL_CLOSED")
 end
 
 function AltinatorAddon:PLAYER_ENTERING_WORLD()
-	SavePlayerData()
+	SavePlayerDataLogin()
+   RequestTimePlayed()
+end
+
+function AltinatorAddon:PLAYER_LOGOUT()
+   SavePlayerDataLogout()
+end
+
+function AltinatorAddon:MAIL_CLOSED()
+   ClearPlayerMailData()
+end
+
+function AltinatorAddon:TIME_PLAYED_MSG(self, total, level)
+	SavePlayerTimePlayed(total, level)
+end
+
+local function HasAttachments()
+	for attachmentIndex = 1, ATTACHMENTS_MAX_SEND do		-- mandatory, loop through all 12 slots, since attachments could be anywhere (ex: slot 4,5,8)
+	   local item, itemID, icon, count = GetSendMailItem(attachmentIndex)
+		if item then
+         return true
+		end
+	end
+   return false
+end
+
+hooksecurefunc("SendMail", function(recipient, subject, body, ...)
+   local name, realm = UnitFullName("player")
+   local recipientName, recipientRealm = strsplit("-", recipient)
+   recipientRealm = recipientRealm or GetNormalizedRealmName()
+   local data = AltinatorDB.global.characters[recipientName .. "-" .. recipientRealm] or nil
+   if data then
+      local attachments = HasAttachments()
+      local moneySent = GetSendMailMoney()
+      local arrivalTime = time()
+      if moneySent>0 or attachments then
+         arrivalTime = arrivalTime + (C["MailDelivery"] * 3600)
+      end
+      data.Mail = data.Mail or {}
+      table.insert(data.Mail, {
+         Sender = name .. "-" .. realm,
+         Subject = subject,
+         Body = body or "",
+         Time = time(),
+         ArrivalTime = arrivalTime,
+         ExpiryTime = time() + C["MailExpiry"] * 86400,
+         HasAttachments = attachments,
+         Money = moneySent,
+         Returned = false
+      })
+      AltinatorDB.global.characters[recipientName .. "-" .. recipientRealm] = data
+   end
+end)
+
+hooksecurefunc("ReturnInboxItem", function(index, ...)
+   local name, realm = UnitFullName("player")
+	local _, stationaryIcon, mailSender, mailSubject, moneySent, _, _, numAttachments = GetInboxHeaderInfo(index)
+   local recipientName, recipientRealm = strsplit("-", mailSender)
+   recipientRealm = recipientRealm or GetNormalizedRealmName()
+   local data = AltinatorDB.global.characters[recipientName .. "-" .. recipientRealm] or nil
+   if data then
+      data.Mail = data.Mail or {}
+      table.insert(data.Mail, {
+         Sender = name .. "-" .. realm,
+         Subject = subject,
+         Body = body or "",
+         Time = time(),
+         ArrivalTime = time(),
+         ExpiryTime = time() + C["MailExpiry"] * 86400,
+         HasAttachments = numAttachments>0,
+         Money = moneySent,
+         Returned = true
+      })
+      AltinatorDB.global.characters[recipientName .. "-" .. recipientRealm] = data
+   end
+end)
+
+local function AutoReturnMail(mailData)
+   if mailData.Returned then
+      return
+   end
+   local name, realm = UnitFullName("player")
+   local data = AltinatorDB.global.characters[mailData.Sender] or nil
+   if data then
+      table.insert(data.Mail, {
+         Sender = name .. "-" .. realm,
+         Subject = mailData.Subject,
+         Body = mailData.Body,
+         Time = time(),
+         ArrivalTime = time(),
+         ExpiryTime = time() + C["MailExpiry"] * 86400,
+         HasAttachments = mailData.HasAttachments,
+         Money = mailData.Money,
+         Returned = true
+      })
+      AltinatorDB.global.characters[recipientName .. "-" .. recipientRealm] = data
+   end
 end
 
 local function GetRealmCharactersSorted()
@@ -119,6 +259,68 @@ local function MoneyToGoldString(money)
 	local scoin = "|TInterface\\MoneyFrame\\UI-SilverIcon:0:0:2:0|t "
 	local gcoin = "|TInterface\\MoneyFrame\\UI-GoldIcon:0:0:2:0|t "	
 	return (gold..gcoin..silver..scoin..copper..ccoin)
+end
+
+local function ShortTimeSpanToString(span)
+   local days = math.floor(span / 86400)
+   span = span - (days * 86400)
+   local hours = math.floor(span / 3600)
+   span = span - (hours * 3600)
+   local minutes = math.floor(span / 60)
+   span = span - (minutes * 60)
+   local seconds = span
+
+   if days>0 then
+      if days == 1 then
+         return days .. " " .. L["Day"]
+      else
+         return days .. " " .. L["Days"]
+      end
+   end
+   if hours>0 then
+      if hours == 1 then
+         return hours .. " " .. L["Hour"]
+      else
+         return hours .. " " .. L["Hours"]
+      end
+   end
+   if minutes>0 then
+      if minutes == 1 then
+         return minutes .. " " .. L["Minute"]
+      else
+         return minutes .. " " .. L["Minutes"]
+      end
+   end
+   if seconds>0 then
+      if seconds == 1 then
+         return seconds .. " " .. L["Second"]
+      else
+         return seconds .. " " .. L["Seconds"]
+      end
+   end
+   return ""
+end
+
+function LongTimeSpanToString(span)
+   local days = math.floor(span / 86400)
+   span = span - (days * 86400)
+   local hours = math.floor(span / 3600)
+   span = span - (hours * 3600)
+   local minutes = math.floor(span / 60)
+   span = span - (minutes * 60)
+   local seconds = span
+
+   local timeString = ""
+   if days>0 then
+      timeString = timeString .. days .. "\124cnADVENTURES_COMBAT_LOG_YELLOW:" .. L["DaysShort"] .. "\124r "
+   end
+   if hours>0 then
+      timeString = timeString .. hours .. "\124cnADVENTURES_COMBAT_LOG_YELLOW:" .. L["HoursShort"] .. "\124r "
+   end
+   if minutes>0 then
+      timeString = timeString .. minutes .. "\124cnADVENTURES_COMBAT_LOG_YELLOW:" .. L["MinutesShort"] .. "\124r "
+   end
+   return timeString
 end
 
 local function CreateInnerBorder(frame, itemQuality)
@@ -252,6 +454,8 @@ local function LoadActivityViewFrame(self)
       local ICON_HEIGHT = 15
       local ROW_HEIGHT = ICON_HEIGHT + 5
 
+      local currentName, currentRealm = UnitFullName("player")
+
       local nameHeader = self:CreateFontString("HeaderName", "ARTWORK", "GameFontHighlight")
       nameHeader:SetPoint("TOPLEFT", 5, -10)
       nameHeader:SetText(L["Characters"])
@@ -261,17 +465,18 @@ local function LoadActivityViewFrame(self)
       mailHeader:SetText(L["Mail"])
 
       local auctionsHeader = self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-      auctionsHeader:SetPoint("LEFT", mailHeader, "LEFT", 100, 0)
+      auctionsHeader:SetPoint("LEFT", mailHeader, "LEFT", 150, 0)
       auctionsHeader:SetText(L["Auctions"])
 
       local playedHeader = self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-      playedHeader:SetPoint("LEFT", auctionsHeader, "LEFT", 140, 0)
+      playedHeader:SetPoint("LEFT", auctionsHeader, "LEFT", 150, 0)
       playedHeader:SetText(L["Played"])
 
       local lastLoginHeader = self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-      lastLoginHeader:SetPoint("LEFT", playedHeader, "LEFT", 80, 0)
+      lastLoginHeader:SetPoint("LEFT", playedHeader, "LEFT", 150, 0)
       lastLoginHeader:SetText(L["LastLogin"])
 
+      local currentTime = time()
       local totalCharacters = 0
       local totalMail = 0
       local totalAuctions = 0
@@ -309,7 +514,19 @@ local function LoadActivityViewFrame(self)
 
             local mailText = self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
             mailText:SetPoint("LEFT", factionIcon, "LEFT", 165, 0)
-            mailText:SetText("NYI")
+            local charMails = 0
+            char.Mail = char.Mail or {}
+            for i=#char.Mail,1,-1 do
+               if char.Mail[i].ArrivalTime < time() then
+                  charMails = charMails + 1
+               end
+            end
+            totalMail = totalMail + charMails
+            if charMails>0 then
+               mailText:SetText("\124cnGREEN_FONT_COLOR:" .. charMails .. "\124r")
+            else
+               mailText:SetText(charMails)
+            end
 
             local auctionCount = 0
             local auctionItems = 0
@@ -320,8 +537,21 @@ local function LoadActivityViewFrame(self)
                end
             end
             local auctionText = self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-            auctionText:SetPoint("LEFT", factionIcon, "LEFT", 265, 0)
+            auctionText:SetPoint("LEFT", factionIcon, "LEFT", 315, 0)
             auctionText:SetText(auctionCount .. " (" .. auctionItems .. " " .. L["AuctionItems"] .. ")")
+
+            local playedText = self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+            playedText:SetPoint("LEFT", factionIcon, "LEFT", 465, 0)
+            playedText:SetText(char.TimePlayed and LongTimeSpanToString(char.TimePlayed.Total) or "")
+            totalPlayed = totalPlayed + (char.TimePlayed and char.TimePlayed.Total or 0)
+
+            local playedText = self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+            playedText:SetPoint("LEFT", factionIcon, "LEFT", 615, 0)
+            if name == currentName .. "-" .. currentRealm then
+               playedText:SetText("\124cnGREEN_FONT_COLOR:" .. L["Online"] .. "\124r")
+            else
+               playedText:SetText(ShortTimeSpanToString(currentTime - char.LastLogin))
+            end
 
             totalCharacters = totalCharacters + 1
          end
@@ -336,8 +566,12 @@ local function LoadActivityViewFrame(self)
       totalMailString:SetText(totalMail)
 
       local totalAuctionsString = self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-      totalAuctionsString:SetPoint("LEFT", totalName, "LEFT", 265, 0)
+      totalAuctionsString:SetPoint("LEFT", totalName, "LEFT", 315, 0)
       totalAuctionsString:SetText(totalAuctions .. " (" .. totalAuctionItems .. " " .. L["AuctionItems"] .. ")")
+
+      local totalPlayedString = self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+      totalPlayedString:SetPoint("LEFT", totalName, "LEFT", 465, 0)
+      totalPlayedString:SetText(LongTimeSpanToString(totalPlayed))
 
       self:SetSize(_WIDTH - 50, ROW_HEIGHT * (totalCharacters + 3))
    else

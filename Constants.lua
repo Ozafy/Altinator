@@ -47,6 +47,8 @@ C["EquipmentSlotIcons"]  = {
 	"Ranged",
 	"Tabard"
 }
+C["MailDelivery"] = 1 -- in hours
+C["MailExpiry"] = 30 -- in days
 
 function C:GetEquipmentSlotIcon(index)
 	if index and C["EquipmentSlotIcons"][index] then
