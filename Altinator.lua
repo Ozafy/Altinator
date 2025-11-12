@@ -105,6 +105,7 @@ local function SavePlayerDataLogout()
    local name, realm = UnitFullName("player")
    local data = AltinatorDB.global.characters[name .. "-" .. realm] or {}
    data.LastLogin = time()
+   data.Resting = IsResting()
    AltinatorDB.global.characters[name .. "-" .. realm] = data
 end
 
@@ -143,9 +144,11 @@ function AltinatorAddon:OnInitialize()
    self:RegisterEvent("MAIL_CLOSED")
 end
 
-function AltinatorAddon:PLAYER_ENTERING_WORLD()
-	SavePlayerDataLogin()
-   RequestTimePlayed()
+function AltinatorAddon:PLAYER_ENTERING_WORLD(self, event, isLogin, isReload)
+   if isLogin or isReload then
+      SavePlayerDataLogin()
+      RequestTimePlayed()
+   end
 end
 
 function AltinatorAddon:PLAYER_LOGOUT()
@@ -436,8 +439,19 @@ local function LoadOverViewFrame(self)
       self.LevelTexts[i] = self.LevelTexts[i] or self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
       self.LevelTexts[i]:SetPoint("LEFT", self.FactionIcons[i], "LEFT", 505, 0)
       local level = char.Level
-      if(level~=60) then
-         level = (("%.1f (\124cnHIGHLIGHT_LIGHT_BLUE:%d%%\124r)"):format(level + (char.XP.Current/char.XP.Needed), (char.XP.Rested/char.XP.Needed * 100)))
+      if level~=60 then
+         local RestPercent = (char.XP.Rested/char.XP.Needed * 100)
+         if RestPercent<150 then
+            local tmpRested = char.XP.Rested or 0
+            local timeResting = (time() - char.LastLogin )/3600
+            local multiplier = C["RestedXPTimeSpan"]
+            if not char.Resting then
+               multiplier = C["RestedXPTimeSpanNotResting"]
+            end
+            tmpRested = tmpRested + ((char.XP.Needed * (C["RestedXPBonus"] / multiplier * timeResting)) )
+            RestPercent = (tmpRested/char.XP.Needed * 100)
+         end
+         level = (("%.1f (\124cnHIGHLIGHT_LIGHT_BLUE:%d%%\124r)"):format(level + (char.XP.Current/char.XP.Needed), RestPercent))
       end
       self.LevelTexts[i]:SetText(level)
 

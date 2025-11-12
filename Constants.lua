@@ -51,6 +51,9 @@ C["EquipmentSlotIcons"]  = {
 }
 C["MailDelivery"] = 1 -- in hours
 C["MailExpiry"] = 30 -- in days
+C["RestedXPBonus"] = 5/100 -- in percent
+C["RestedXPTimeSpan"] = 8 -- time in hours to gain the percent bonus
+C["RestedXPTimeSpanNotResting"] = 32 -- time in hours to gain the percent bonus outside resting areas
 
 function C:GetEquipmentSlotIcon(index)
 	if index and C["EquipmentSlotIcons"][index] then
