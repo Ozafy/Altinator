@@ -31,36 +31,37 @@ local function SavePlayerDataLogin()
    data.LastLogin = time()
 
    local className, classFilename, classId = UnitClass("player")
-   data.Class={}
+   data.Class= data.Class or {}
    data.Class.Name=className
    data.Class.File=classFilename
    data.Class.Id=classId
 
    local raceName, raceFile, raceID = UnitRace("player")
-   data.Race={}
+   data.Race= data.Race or {}
    data.Race.Name=raceName
    data.Race.File=raceFile
    data.Race.Id=raceID
 
 
    local guildName, guildRankName, guildRankIndex, guildRealm = GetGuildInfo("player")
-   data.Guild={}
+   data.Guild= data.Guild or {}
    data.Guild.Name=guildName
    data.Guild.Rank=guildRankName
 
-   data.XP={}
+   data.XP=data.XP or{}
    data.XP.Current=UnitXP("player")
    data.XP.Needed=UnitXPMax("player")
    data.XP.Rested=GetXPExhaustion()
 
-   data.Professions={}
-   data.ProfessionsSecondairy={}
+   data.Professions=data.Professions or {}
+   data.ProfessionsSecondairy=data.ProfessionsSecondairy or {}
    local profNames_rev = tInvert(L["ProfessionIDs"])
+   local skillsFound = 0
    for i = 1, GetNumSkillLines() do
     local name, _, _, skillRank, _, _, skillMaxRank = GetSkillLineInfo(i)
     if profNames_rev[name] then
       local profId=profNames_rev[name]
-      
+      skillsFound = skillsFound + 1
       if C["SecondairyProfession"][profId] then
          data.ProfessionsSecondairy[profId]={}
          data.ProfessionsSecondairy[profId].Name=name
@@ -74,7 +75,6 @@ local function SavePlayerDataLogin()
          data.Professions[profId].Skill=skillRank
          data.Professions[profId].SkillMax=skillMaxRank
       end
-
     end
    end
 
