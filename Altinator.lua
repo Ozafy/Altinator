@@ -404,8 +404,12 @@ local function CreateInnerBorder(frame, itemQuality)
       edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1,
       insets = { left = -1, right = -1, top = -1, bottom = -1}
    })
-   local r, g, b, _ = C_Item.GetItemQualityColor(itemQuality)
-   frame.iborder:SetBackdropBorderColor(r, g, b)
+   local r, g, b, alpha = 0, 0, 0, 0
+   if itemQuality > -1 then
+      r, g, b, _ = C_Item.GetItemQualityColor(itemQuality)
+      alpha = 1
+   end
+   frame.iborder:SetBackdropBorderColor(r, g, b, alpha)
 	return frame.iborder
 end
 
@@ -750,33 +754,37 @@ local function LoadGearViewFrame(self)
                local cr, cg, cb, web = GetClassColor(char.Class.File)
                self.CharNames[i]:SetTextColor(cr, cg, cb)
 
-               for j, item in pairs(equipment) do
-                  if item then
-                     self.Frames["item" .. totalCharacters .. j] = self.Frames["item" .. totalCharacters .. j] or CreateFrame("Frame", nil, self)
-                     self.Frames["item" .. totalCharacters .. j]:SetSize(ICON_SIZE, ICON_SIZE)
-                     self.Frames["item" .. totalCharacters .. j]:SetPoint("LEFT", self.ClassFrames[i], "LEFT", (j*(ICON_SIZE+8))+96, 0)
-                     if item["quality"] then
-                        CreateInnerBorder(self.Frames["item" .. totalCharacters .. j], item["quality"])
-                     end
-                     self.Frames["item" .. totalCharacters .. j].Texture = self.Frames["item" .. totalCharacters .. j].Texture or self.Frames["item" .. totalCharacters .. j]:CreateTexture(nil, "BACKGROUND")
-                     self.Frames["item" .. totalCharacters .. j].Texture:SetSize(ICON_SIZE, ICON_SIZE)
-                     self.Frames["item" .. totalCharacters .. j].Texture:SetPoint("CENTER")
-                     if item["iconTexture"] then
-                        self.Frames["item" .. totalCharacters .. j].Texture:SetTexture(item["iconTexture"])
-                     else
-                        self.Frames["item" .. totalCharacters .. j].Texture:SetTexture(C:GetEquipmentSlotIcon(j-1))
-                     end
+               for j = 2, 20 do
+                  local item = equipment[j]
+                  self.Frames["item" .. totalCharacters .. "i" .. j] = self.Frames["item" .. totalCharacters .. "i" .. j] or CreateFrame("Frame", nil, self)
+                  self.Frames["item" .. totalCharacters .. "i" .. j]:SetSize(ICON_SIZE, ICON_SIZE)
+                  self.Frames["item" .. totalCharacters .. "i" .. j]:SetPoint("LEFT", self.ClassFrames[i], "LEFT", (j*(ICON_SIZE+8))+96, 0)
+                  if item["quality"] then
+                     CreateInnerBorder(self.Frames["item" .. totalCharacters .. "i" .. j], item["quality"])
+                  else
+                     CreateInnerBorder(self.Frames["item" .. totalCharacters .. "i" .. j], -1)
+                  end
+                  self.Frames["item" .. totalCharacters .. "i" .. j].Texture = self.Frames["item" .. totalCharacters .. "i" .. j].Texture or self.Frames["item" .. totalCharacters .. "i" .. j]:CreateTexture(nil, "BACKGROUND")
+                  self.Frames["item" .. totalCharacters .. "i" .. j].Texture:SetSize(ICON_SIZE, ICON_SIZE)
+                  self.Frames["item" .. totalCharacters .. "i" .. j].Texture:SetPoint("CENTER")
+                  if item["iconTexture"] then
+                     self.Frames["item" .. totalCharacters .. "i" .. j].Texture:SetTexture(item["iconTexture"])
+                  else
+                     self.Frames["item" .. totalCharacters .. "i" .. j].Texture:SetTexture(C:GetEquipmentSlotIcon(j-1))
+                  end
 
-                     if item["quality"] then
-                        self.Frames["item" .. totalCharacters .. j].TooltipItemLink = item["itemLink"]
-                        self.Frames["item" .. totalCharacters .. j]:SetScript("OnEnter", function(self)
-                           AltinatorTooltip:SetOwner(self, "ANCHOR_CURSOR")
-                           AltinatorTooltip:SetHyperlink(self.TooltipItemLink)
-                        end)
-                        self.Frames["item" .. totalCharacters .. j]:SetScript("OnLeave", function(self)
-                           AltinatorTooltip:Hide()
-                        end)
-                     end
+                  if item["quality"] then
+                     self.Frames["item" .. totalCharacters .. "i" .. j].TooltipItemLink = item["itemLink"]
+                     self.Frames["item" .. totalCharacters .. "i" .. j]:SetScript("OnEnter", function(self)
+                        AltinatorTooltip:SetOwner(self, "ANCHOR_CURSOR")
+                        AltinatorTooltip:SetHyperlink(self.TooltipItemLink)
+                     end)
+                     self.Frames["item" .. totalCharacters .. "i" .. j]:SetScript("OnLeave", function(self)
+                        AltinatorTooltip:Hide()
+                     end)
+                  else
+                     self.Frames["item" .. totalCharacters .. "i" .. j]:SetScript("OnEnter", nil)
+                     self.Frames["item" .. totalCharacters .. "i" .. j]:SetScript("OnLeave", nil)
                   end
                end
 
