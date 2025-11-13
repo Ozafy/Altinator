@@ -29,6 +29,7 @@ local function SavePlayerDataLogin()
    data.Faction = UnitFactionGroup("player")
    data.Money = GetMoney()
    data.LastLogin = time()
+   data.LastLogout = data.LastLogout or time()
 
    local className, classFilename, classId = UnitClass("player")
    data.Class= data.Class or {}
@@ -103,17 +104,7 @@ end
 local function SavePlayerDataLogout()
    local name, realm = UnitFullName("player")
    local data = AltinatorDB.global.characters[name .. "-" .. realm] or {}
-   local guildName, guildRankName, guildRankIndex, guildRealm = GetGuildInfo("player")
-   data.Guild= data.Guild or {}
-   data.Guild.Name=guildName
-   data.Guild.Rank=guildRankName
-   data.Money = GetMoney()
-   data.LastLogin = time()
-   data.Resting = IsResting()
-   data.XP=data.XP or{}
-   data.XP.Current=UnitXP("player")
-   data.XP.Needed=UnitXPMax("player")
-   data.XP.Rested=GetXPExhaustion()
+   data.LastLogout = time()
    AltinatorDB.global.characters[name .. "-" .. realm] = data
 end
 
@@ -127,6 +118,42 @@ local function SavePlayerTimePlayed(total, level)
       data.TimePlayed.Level = level
       AltinatorDB.global.characters[name .. "-" .. realm] = data
    end
+end
+
+local function SavePlayerMoney(total, level)
+   local name, realm = UnitFullName("player")
+   if realm then
+      local data = AltinatorDB.global.characters[name .. "-" .. realm] or {}
+      data.Money = GetMoney()
+      AltinatorDB.global.characters[name .. "-" .. realm] = data
+   end
+end
+
+local function SavePlayerXP()
+   local name, realm = UnitFullName("player")
+   local data = AltinatorDB.global.characters[name .. "-" .. realm] or {}
+   data.XP=data.XP or{}
+   data.XP.Current=UnitXP("player")
+   data.XP.Needed=UnitXPMax("player")
+   data.XP.Rested=GetXPExhaustion()
+   AltinatorDB.global.characters[name .. "-" .. realm] = data
+end
+
+local function SavePlayerResting()
+   local name, realm = UnitFullName("player")
+   local data = AltinatorDB.global.characters[name .. "-" .. realm] or {}
+   data.Resting = IsResting()
+   AltinatorDB.global.characters[name .. "-" .. realm] = data
+end
+
+local function SavePlayerGuild()
+   local name, realm = UnitFullName("player")
+   local data = AltinatorDB.global.characters[name .. "-" .. realm] or {}
+   local guildName, guildRankName, guildRankIndex, guildRealm = GetGuildInfo("player")
+   data.Guild= data.Guild or {}
+   data.Guild.Name=guildName
+   data.Guild.Rank=guildRankName
+   AltinatorDB.global.characters[name .. "-" .. realm] = data
 end
 
 function AltinatorAddon:OnInitialize()
@@ -150,6 +177,23 @@ function AltinatorAddon:OnInitialize()
    self:RegisterEvent("PLAYER_LOGOUT")
    self:RegisterEvent("TIME_PLAYED_MSG")
    self:RegisterEvent("MAIL_CLOSED")
+   self:RegisterEvent("PLAYER_MONEY")
+   self:RegisterEvent("PLAYER_LEVEL_UP")
+   self:RegisterEvent("PLAYER_XP_UPDATE")
+   self:RegisterEvent("PLAYER_UPDATE_RESTING")
+   self:RegisterEvent("PLAYER_GUILD_UPDATE")
+end
+
+function AltinatorAddon:OnDisable()
+   self:UnregisterEvent("PLAYER_ENTERING_WORLD")
+   self:UnregisterEvent("PLAYER_LOGOUT")
+   self:UnregisterEvent("TIME_PLAYED_MSG")
+   self:UnregisterEvent("MAIL_CLOSED")
+   self:UnregisterEvent("PLAYER_MONEY")
+   self:UnregisterEvent("PLAYER_LEVEL_UP")
+   self:UnregisterEvent("PLAYER_XP_UPDATE")
+   self:UnregisterEvent("PLAYER_UPDATE_RESTING")
+   self:UnregisterEvent("PLAYER_GUILD_UPDATE")
 end
 
 function AltinatorAddon:PLAYER_ENTERING_WORLD(self, isLogin, isReload)
@@ -170,6 +214,26 @@ end
 
 function AltinatorAddon:TIME_PLAYED_MSG(self, total, level)
 	SavePlayerTimePlayed(total, level)
+end
+
+function AltinatorAddon:PLAYER_MONEY()
+   SavePlayerMoney()
+end
+
+function AltinatorAddon:PLAYER_LEVEL_UP()
+   SavePlayerXP()
+end
+
+function AltinatorAddon:PLAYER_XP_UPDATE()
+   SavePlayerXP()
+end
+
+function AltinatorAddon:PLAYER_UPDATE_RESTING()
+   SavePlayerResting()
+end
+
+function AltinatorAddon:PLAYER_GUILD_UPDATE()
+   SavePlayerGuild()
 end
 
 local function HasAttachments()
@@ -451,7 +515,7 @@ local function LoadOverViewFrame(self)
       if level~=60 then
          --local RestPercent = (char.XP.Rested/char.XP.Needed * 100)
          local tmpRested = char.XP.Rested
-         local timeResting = (time() - (char.LastLogin) )/3600
+         local timeResting = (time() - (char.LastLogout or char.LastLogin) )/3600
          local multiplier = C["RestedXPTimeSpan"]
          if not char.Resting then
             multiplier = C["RestedXPTimeSpanNotResting"]
@@ -511,9 +575,9 @@ local function LoadActivityViewFrame(self)
       self.PlayedHeader:SetPoint("LEFT", self.AuctionsHeader, "LEFT", 150, 0)
       self.PlayedHeader:SetText(L["Played"])
 
-      self.LastLoginHeader = self.LastLoginHeader or self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-      self.LastLoginHeader:SetPoint("LEFT", self.PlayedHeader, "LEFT", 150, 0)
-      self.LastLoginHeader:SetText(L["LastLogin"])
+      self.LastLogoutHeader = self.LastLogoutHeader or self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+      self.LastLogoutHeader:SetPoint("LEFT", self.PlayedHeader, "LEFT", 150, 0)
+      self.LastLogoutHeader:SetText(L["LastLogout"])
 
       local currentTime = time()
       local totalCharacters = 0
@@ -605,7 +669,7 @@ local function LoadActivityViewFrame(self)
             if name == currentName .. "-" .. currentRealm then
                self.LastPlayed[i]:SetText("\124cnGREEN_FONT_COLOR:" .. L["Online"] .. "\124r")
             else
-               self.LastPlayed[i]:SetText(ShortTimeSpanToString(currentTime - char.LastLogin))
+               self.LastPlayed[i]:SetText(ShortTimeSpanToString(currentTime - (char.LastLogout or char.LastLogin)))
             end
 
             totalCharacters = totalCharacters + 1
