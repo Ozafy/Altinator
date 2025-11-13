@@ -25,6 +25,7 @@ C["ProfessionIcons"]= {
     [393] = "inv_misc_pelt_wolf_01"
 }
 C["SecondairyProfession"] = { [129]=true, [185]=true, [356]=true }
+C["SecondairyProfessionOrder"] = { [129]=1, [185]=2, [356]=3 }
 C["Genders"] = {"unknown", "male", "female"}
 
 

@@ -410,18 +410,22 @@ local function CreateInnerBorder(frame, itemQuality)
 end
 
 local function CreateProfessionTexture(contentFrame, charIndex, anchor, baseOffset, profIndex, id, profession)
+   local profPosition = profIndex
+   if C["SecondairyProfession"][id] then
+      profPosition = C["SecondairyProfessionOrder"][id] + 1 -- secondairy professions start after 2 normal professions
+   end
    contentFrame.ProfessionIcons = contentFrame.ProfessionIcons or {}
    contentFrame.ProfessionIcons[charIndex] = contentFrame.ProfessionIcons[charIndex] or {}
    contentFrame.ProfessionIcons[charIndex][profIndex] = contentFrame.ProfessionIcons[charIndex][profIndex] or contentFrame:CreateTexture("Profession_Icon_" .. id, "BACKGROUND")
    contentFrame.ProfessionIcons[charIndex][profIndex]:SetWidth(15)
    contentFrame.ProfessionIcons[charIndex][profIndex]:SetHeight(15)
-   contentFrame.ProfessionIcons[charIndex][profIndex]:SetPoint("LEFT", anchor,"LEFT", baseOffset + (profIndex * 80), 0)
+   contentFrame.ProfessionIcons[charIndex][profIndex]:SetPoint("LEFT", anchor,"LEFT", baseOffset + (profPosition * 80), 0)
    contentFrame.ProfessionIcons[charIndex][profIndex]:SetTexture("Interface\\ICONS\\" .. profession.File)
 
    contentFrame.ProfessionTexts = contentFrame.ProfessionTexts or {}
    contentFrame.ProfessionTexts[charIndex] = contentFrame.ProfessionTexts[charIndex] or {}
    contentFrame.ProfessionTexts[charIndex][profIndex] = contentFrame.ProfessionTexts[charIndex][profIndex] or contentFrame:CreateFontString("Profession_Text_" .. id, "ARTWORK", "GameFontHighlight")
-   contentFrame.ProfessionTexts[charIndex][profIndex]:SetPoint("LEFT", anchor, "LEFT", baseOffset + 20 + (profIndex * 80), 0)
+   contentFrame.ProfessionTexts[charIndex][profIndex]:SetPoint("LEFT", anchor, "LEFT", baseOffset + 20 + (profPosition * 80), 0)
    contentFrame.ProfessionTexts[charIndex][profIndex]:SetText(profession.Skill.."/"..profession.SkillMax)
 end
 
