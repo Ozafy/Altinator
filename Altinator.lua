@@ -19,11 +19,27 @@ local AltinatorDB
 local AltinatorFrame
 local AltinatorTooltip
 
+
+function MergeObjects(mergeInto, mergeFrom)
+    for k, v in pairs(mergeFrom) do
+        if (type(v) == "table") and (type(mergeInto[k] or false) == "table") then
+            MergeObjects(mergeInto[k], mergeFrom[k])
+        else
+            mergeInto[k] = v
+        end
+    end
+    return mergeInto
+end
+
+
 local function SavePlayerDataLogin()
    local name, realm = UnitFullName("player")
-   local data = AltinatorDB.global.characters[name .. "-" .. realm] or {}
+   local data = MergeObjects(AltinatorDB.global.characters[name .. "-" .. realm] or {}, AltinatorAddon.CurrentCharacter)
+   AltinatorDB.global.characters[name .. "-" .. realm] = data
+   AltinatorAddon.CurrentCharacter = data
    data.Name = name
    data.Realm = realm
+   data.FullName= name .. "-" .. realm
    data.Sex = UnitSex("player")
    data.Level = UnitLevel("player")
    data.Faction = UnitFactionGroup("player")
@@ -85,13 +101,10 @@ local function SavePlayerDataLogin()
          table.remove(data.Mail, i)
       end
    end
-
-   AltinatorDB.global.characters[name .. "-" .. realm] = data
 end
 
 local function ClearPlayerMailData()
-   local name, realm = UnitFullName("player")
-   local data = AltinatorDB.global.characters[name .. "-" .. realm] or {}
+   local data = AltinatorAddon.CurrentCharacter
    data.Mail = data.Mail or {}
    for i=#data.Mail,1,-1 do
       if data.Mail[i].ArrivalTime < time() then
@@ -99,62 +112,45 @@ local function ClearPlayerMailData()
       end
    end
    data.Money = GetMoney() -- update money in case mail had money attached
-   AltinatorDB.global.characters[name .. "-" .. realm] = data
 end
 
 local function SavePlayerDataLogout()
-   local name, realm = UnitFullName("player")
-   local data = AltinatorDB.global.characters[name .. "-" .. realm] or {}
+   local data = AltinatorAddon.CurrentCharacter
    data.LastLogout = time()
-   AltinatorDB.global.characters[name .. "-" .. realm] = data
 end
 
 
 local function SavePlayerTimePlayed(total, level)
-   local name, realm = UnitFullName("player")
-   if realm then
-      local data = AltinatorDB.global.characters[name .. "-" .. realm] or {}
-      data.TimePlayed = {}
-      data.TimePlayed.Total = total
-      data.TimePlayed.Level = level
-      AltinatorDB.global.characters[name .. "-" .. realm] = data
-   end
+   local data = AltinatorAddon.CurrentCharacter
+   data.TimePlayed = {}
+   data.TimePlayed.Total = total
+   data.TimePlayed.Level = level
 end
 
 local function SavePlayerMoney(total, level)
-   local name, realm = UnitFullName("player")
-   if realm then
-      local data = AltinatorDB.global.characters[name .. "-" .. realm] or {}
-      data.Money = GetMoney()
-      AltinatorDB.global.characters[name .. "-" .. realm] = data
-   end
+   local data = AltinatorAddon.CurrentCharacter
+   data.Money = GetMoney()
 end
 
 local function SavePlayerXP()
-   local name, realm = UnitFullName("player")
-   local data = AltinatorDB.global.characters[name .. "-" .. realm] or {}
+   local data = AltinatorAddon.CurrentCharacter
    data.XP=data.XP or{}
    data.XP.Current=UnitXP("player")
    data.XP.Needed=UnitXPMax("player")
    data.XP.Rested=GetXPExhaustion()
-   AltinatorDB.global.characters[name .. "-" .. realm] = data
 end
 
 local function SavePlayerResting()
-   local name, realm = UnitFullName("player")
-   local data = AltinatorDB.global.characters[name .. "-" .. realm] or {}
+   local data = AltinatorAddon.CurrentCharacter
    data.Resting = IsResting()
-   AltinatorDB.global.characters[name .. "-" .. realm] = data
 end
 
 local function SavePlayerGuild()
-   local name, realm = UnitFullName("player")
-   local data = AltinatorDB.global.characters[name .. "-" .. realm] or {}
+   local data = AltinatorAddon.CurrentCharacter
    local guildName, guildRankName, guildRankIndex, guildRealm = GetGuildInfo("player")
    data.Guild= data.Guild or {}
    data.Guild.Name=guildName
    data.Guild.Rank=guildRankName
-   AltinatorDB.global.characters[name .. "-" .. realm] = data
 end
 
 function AltinatorAddon:OnInitialize()
@@ -174,6 +170,7 @@ function AltinatorAddon:OnInitialize()
       AltinatorDB.global.characters = {}
       AltinatorDB.global.dbversion = C["MajorDBVersion"]
    end
+   AltinatorAddon.CurrentCharacter = {}
    self:RegisterEvent("PLAYER_ENTERING_WORLD")
    self:RegisterEvent("PLAYER_LOGOUT")
    self:RegisterEvent("TIME_PLAYED_MSG")
@@ -183,6 +180,7 @@ function AltinatorAddon:OnInitialize()
    self:RegisterEvent("PLAYER_XP_UPDATE")
    self:RegisterEvent("PLAYER_UPDATE_RESTING")
    self:RegisterEvent("PLAYER_GUILD_UPDATE")
+   RequestTimePlayed()
 end
 
 function AltinatorAddon:OnDisable()
@@ -199,9 +197,7 @@ end
 
 function AltinatorAddon:PLAYER_ENTERING_WORLD(self, isLogin, isReload)
    if isLogin or isReload then
-      print("saving")
       SavePlayerDataLogin()
-      RequestTimePlayed()
    end
 end
 
@@ -248,10 +244,9 @@ local function HasAttachments()
 end
 
 hooksecurefunc("SendMail", function(recipient, subject, body, ...)
-   local name, realm = UnitFullName("player")
    local recipientName, recipientRealm = strsplit("-", recipient)
    recipientRealm = recipientRealm or GetNormalizedRealmName()
-   local data = AltinatorDB.global.characters[recipientName .. "-" .. recipientRealm] or nil
+   local data = AltinatorAddon.CurrentCharacter
    if data then
       local attachments = HasAttachments()
       local moneySent = GetSendMailMoney()
@@ -261,7 +256,7 @@ hooksecurefunc("SendMail", function(recipient, subject, body, ...)
       end
       data.Mail = data.Mail or {}
       table.insert(data.Mail, {
-         Sender = name .. "-" .. realm,
+         Sender = data.FullName,
          Subject = subject,
          Body = body or "",
          Time = time(),
@@ -271,20 +266,18 @@ hooksecurefunc("SendMail", function(recipient, subject, body, ...)
          Money = moneySent,
          Returned = false
       })
-      AltinatorDB.global.characters[recipientName .. "-" .. recipientRealm] = data
    end
 end)
 
 hooksecurefunc("ReturnInboxItem", function(index, ...)
-   local name, realm = UnitFullName("player")
 	local _, stationaryIcon, mailSender, mailSubject, moneySent, _, _, numAttachments = GetInboxHeaderInfo(index)
    local recipientName, recipientRealm = strsplit("-", mailSender)
    recipientRealm = recipientRealm or GetNormalizedRealmName()
-   local data = AltinatorDB.global.characters[recipientName .. "-" .. recipientRealm] or nil
+   local data = AltinatorAddon.CurrentCharacter
    if data then
       data.Mail = data.Mail or {}
       table.insert(data.Mail, {
-         Sender = name .. "-" .. realm,
+         Sender = data.FullName,
          Subject = subject,
          Body = body or "",
          Time = time(),
@@ -294,7 +287,6 @@ hooksecurefunc("ReturnInboxItem", function(index, ...)
          Money = moneySent,
          Returned = true
       })
-      AltinatorDB.global.characters[recipientName .. "-" .. recipientRealm] = data
    end
 end)
 
@@ -302,11 +294,10 @@ local function AutoReturnMail(mailData)
    if mailData.Returned then
       return
    end
-   local name, realm = UnitFullName("player")
-   local data = AltinatorDB.global.characters[mailData.Sender] or nil
+   local data = AltinatorAddon.CurrentCharacter
    if data then
       table.insert(data.Mail, {
-         Sender = name .. "-" .. realm,
+         Sender = data.FullName,
          Subject = mailData.Subject,
          Body = mailData.Body,
          Time = time(),
@@ -316,7 +307,6 @@ local function AutoReturnMail(mailData)
          Money = mailData.Money,
          Returned = true
       })
-      AltinatorDB.global.characters[recipientName .. "-" .. recipientRealm] = data
    end
 end
 
@@ -558,7 +548,7 @@ local function LoadActivityViewFrame(self)
       local ICON_HEIGHT = 15
       local ROW_HEIGHT = ICON_HEIGHT + 5
 
-      local currentName, currentRealm = UnitFullName("player")
+      local data = AltinatorAddon.CurrentCharacter
 
       self.NameHeader = self.NameHeader or self:CreateFontString("HeaderName", "ARTWORK", "GameFontHighlight")
       self.NameHeader:SetPoint("TOPLEFT", 5, -10)
@@ -667,7 +657,7 @@ local function LoadActivityViewFrame(self)
 
             self.LastPlayed[i] = self.LastPlayed[i] or self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
             self.LastPlayed[i]:SetPoint("LEFT", self.FactionIcons[i], "LEFT", 615, 0)
-            if name == currentName .. "-" .. currentRealm then
+            if name == data.FullName then
                self.LastPlayed[i]:SetText("\124cnGREEN_FONT_COLOR:" .. L["Online"] .. "\124r")
             else
                self.LastPlayed[i]:SetText(ShortTimeSpanToString(currentTime - (char.LastLogout or char.LastLogin)))
