@@ -98,6 +98,7 @@ local function ClearPlayerMailData()
          table.remove(data.Mail, i)
       end
    end
+   data.Money = GetMoney() -- update money in case mail had money attached
    AltinatorDB.global.characters[name .. "-" .. realm] = data
 end
 
