@@ -43,6 +43,11 @@ local function SavePlayerDataLogin()
    data.Sex = UnitSex("player")
    data.Level = UnitLevel("player")
    data.Faction = UnitFactionGroup("player")
+      
+   data.Rank = data.Rank or {}
+   data.Rank.Value = UnitPVPRank("player")
+   data.Rank.Name = GetPVPRankInfo(data.Rank.Value)
+
    data.Money = GetMoney()
    data.LastLogin = time()
    data.LastLogout = data.LastLogout or time()
@@ -246,7 +251,7 @@ end
 hooksecurefunc("SendMail", function(recipient, subject, body, ...)
    local recipientName, recipientRealm = strsplit("-", recipient)
    recipientRealm = recipientRealm or GetNormalizedRealmName()
-   local data = AltinatorAddon.CurrentCharacter
+   local data = AltinatorDB.global.characters[recipientName .. "-" .. recipientRealm]
    if data then
       local attachments = HasAttachments()
       local moneySent = GetSendMailMoney()
@@ -256,7 +261,7 @@ hooksecurefunc("SendMail", function(recipient, subject, body, ...)
       end
       data.Mail = data.Mail or {}
       table.insert(data.Mail, {
-         Sender = data.FullName,
+         Sender = AltinatorAddon.CurrentCharacter.FullName,
          Subject = subject,
          Body = body or "",
          Time = time(),
@@ -273,11 +278,11 @@ hooksecurefunc("ReturnInboxItem", function(index, ...)
 	local _, stationaryIcon, mailSender, mailSubject, moneySent, _, _, numAttachments = GetInboxHeaderInfo(index)
    local recipientName, recipientRealm = strsplit("-", mailSender)
    recipientRealm = recipientRealm or GetNormalizedRealmName()
-   local data = AltinatorAddon.CurrentCharacter
+   local data = AltinatorDB.global.characters[recipientName .. "-" .. recipientRealm]
    if data then
       data.Mail = data.Mail or {}
       table.insert(data.Mail, {
-         Sender = data.FullName,
+         Sender = AltinatorAddon.CurrentCharacter.FullName,
          Subject = subject,
          Body = body or "",
          Time = time(),
@@ -294,10 +299,10 @@ local function AutoReturnMail(mailData)
    if mailData.Returned then
       return
    end
-   local data = AltinatorAddon.CurrentCharacter
+   local data = AltinatorDB.global.characters[mailData.Sender]
    if data then
       table.insert(data.Mail, {
-         Sender = data.FullName,
+         Sender = AltinatorAddon.CurrentCharacter.FullName,
          Subject = mailData.Subject,
          Body = mailData.Body,
          Time = time(),
@@ -472,9 +477,24 @@ local function LoadOverViewFrame(self)
       self.FactionIcons[i] = self.FactionIcons[i] or self:CreateTexture("Faction_Icon_" .. i, "BACKGROUND")
       self.FactionIcons[i]:SetSize(ICON_HEIGHT, ICON_HEIGHT)
       self.FactionIcons[i]:SetPoint("TOPLEFT", self.NameHeader, "BOTTOMLEFT", 0, ROW_HEIGHT * -1 * (totalCharacters+1))
+      local f = "h"
       local banner = "inv_bannerpvp_01"
       if(char.Faction == "Alliance") then
+         f = "a"
          banner = "inv_bannerpvp_02"
+      end
+      if(char.Rank and char.Rank.Value>=5) then
+         banner = "achievement_pvp_" .. f .. "_"..string.format("%02d", char.Rank.Value-4)
+         self.FactionIcons[i]:SetScript("OnEnter", function(self)
+            AltinatorTooltip:SetOwner(self, "ANCHOR_CURSOR")
+            AltinatorTooltip:SetText(char.Rank.Name)
+         end)
+         self.FactionIcons[i]:SetScript("OnLeave", function(self)
+            AltinatorTooltip:Hide()
+         end)
+      else
+         self.FactionIcons[i]:SetScript("OnEnter", nil)
+         self.FactionIcons[i]:SetScript("OnLeave", nil)
       end
       self.FactionIcons[i]:SetTexture("Interface\\ICONS\\" .. banner)
 
@@ -1015,6 +1035,10 @@ function AltinatorAddon:CreateMainFrame()
 
    AltinatorFrame:SetScript("OnShow", function()
          PlaySound(808)
+         local scrollChild = AltinatorFrame.ScrollFrame:GetScrollChild()
+         if(scrollChild) then
+            scrollChild:LoadContent()
+         end
    end)
 
    AltinatorFrame:SetScript("OnHide", function()
