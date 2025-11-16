@@ -1041,6 +1041,7 @@ function AltinatorAddon:CreateMainFrame()
          local scrollChild = AltinatorFrame.ScrollFrame:GetScrollChild()
          if(scrollChild) then
             scrollChild:LoadContent()
+            scrollChild:Show()
          end
    end)
 
