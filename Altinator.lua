@@ -954,7 +954,21 @@ local function LoadOptionsViewFrame(self)
    self.Header.Name:SetPoint("CENTER", 0, 0)
    self.Header.Name:SetText(L["Options"])
 
-   self:SetSize(_WIDTH-42, ROW_HEIGHT * 1)
+   self.MinimapCheckButton = self.MinimapCheckButton or CreateFrame("CheckButton", "MinimapCheckButton", self, "ChatConfigCheckButtonTemplate");
+   self.MinimapCheckButton:SetPoint("TOPLEFT", 5, -20);
+   getglobal(self.MinimapCheckButton:GetName() .. 'Text'):SetText(L["OptionMinimap"]);
+   self.MinimapCheckButton:SetChecked(AltinatorDB.profile.minimap);
+   self.MinimapCheckButton:SetScript("OnClick", 
+   function()
+      if AltinatorDB.profile.minimap then
+         AltinatorDB.profile.minimap = false
+         icon:Hide()
+      else
+         AltinatorDB.profile.minimap = true
+         icon:Show()
+      end
+   end);
+   self:SetSize(_WIDTH-42, _HEIGHT - 50)
 end
 
 function AltinatorAddon:ToggleFrame()
