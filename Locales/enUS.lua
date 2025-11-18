@@ -69,4 +69,4 @@ L["EquipmentSlots"]= {
 L["SearchLabel"] = "Search:"
 L["SearchButton"] = "Search"
 L["SearchNoResults"] = "No results found"
-L["OptionMinimap"] = "Show minimap button"
+L["OptionMinimap"] = "Hide minimap icon"

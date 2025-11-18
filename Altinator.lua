@@ -18,7 +18,16 @@ local icon = LibStub("LibDBIcon-1.0")
 local AltinatorDB
 local AltinatorFrame
 local AltinatorTooltip
+local AltinatorSettingsCategory = Settings.RegisterVerticalLayoutCategory("Altinator")
+SLASH_ALTINATOR1, SLASH_ALTINATOR2 = "/alt", "/altinator"
 
+SlashCmdList.ALTINATOR = function(msg, editBox)
+   if msg == "options" or msg == "o" then
+      Settings.OpenToCategory(AltinatorSettingsCategory:GetID())
+   else
+      AltinatorAddon:ToggleFrame()
+   end
+end
 
 function MergeObjects(mergeInto, mergeFrom)
     for k, v in pairs(mergeFrom) do
@@ -31,6 +40,30 @@ function MergeObjects(mergeInto, mergeFrom)
     return mergeInto
 end
 
+local function OnSettingChanged(setting, value)
+   if value then
+      AltinatorDB.profile.minimap.hide = true
+      icon:Hide("Altinator")
+   else
+      AltinatorDB.profile.minimap.hide = false
+      icon:Show("Altinator")
+   end
+end
+
+
+local function LoadOptionsViewFrame()
+	local name = L["OptionMinimap"]
+	local variable = "Altinator_Minimap_Toggle"
+	local variableKey = "hide"
+	local variableTbl = AltinatorDB.profile.minimap
+	local defaultValue = false
+	local setting = Settings.RegisterAddOnSetting(AltinatorSettingsCategory, variable, variableKey, variableTbl, type(defaultValue), name, defaultValue)
+	setting:SetValueChangedCallback(OnSettingChanged)
+
+	local tooltip = L["OptionMinimap"]
+	Settings.CreateCheckbox(AltinatorSettingsCategory, setting, tooltip)
+   Settings.RegisterAddOnCategory(AltinatorSettingsCategory)
+end
 
 local function SavePlayerDataLogin()
    local name, realm = UnitFullName("player")
@@ -185,6 +218,7 @@ function AltinatorAddon:OnInitialize()
    self:RegisterEvent("PLAYER_XP_UPDATE")
    self:RegisterEvent("PLAYER_UPDATE_RESTING")
    self:RegisterEvent("PLAYER_GUILD_UPDATE")
+   LoadOptionsViewFrame()
    RequestTimePlayed()
 end
 
@@ -943,33 +977,7 @@ local function LoadSearchViewFrame(self)
    end
 end
 
-local function LoadOptionsViewFrame(self)
-   local ROW_WIDTH = _WIDTH-50
-   local ROW_HEIGHT = 20
-   self.Header = self.Header or CreateFrame("Frame", nil, self)
-   self.Header:SetSize(ROW_WIDTH, ROW_HEIGHT)
-   self.Header:SetPoint("TOPLEFT", 0, 0)
 
-   self.Header.Name = self.Header.Name or self.Header:CreateFontString("HeaderName", "ARTWORK", "GameFontHighlight")
-   self.Header.Name:SetPoint("CENTER", 0, 0)
-   self.Header.Name:SetText(L["Options"])
-
-   self.MinimapCheckButton = self.MinimapCheckButton or CreateFrame("CheckButton", "MinimapCheckButton", self, "ChatConfigCheckButtonTemplate");
-   self.MinimapCheckButton:SetPoint("TOPLEFT", 5, -20);
-   getglobal(self.MinimapCheckButton:GetName() .. 'Text'):SetText(L["OptionMinimap"]);
-   self.MinimapCheckButton:SetChecked(AltinatorDB.profile.minimap);
-   self.MinimapCheckButton:SetScript("OnClick", 
-   function()
-      if AltinatorDB.profile.minimap then
-         AltinatorDB.profile.minimap = false
-         icon:Hide()
-      else
-         AltinatorDB.profile.minimap = true
-         icon:Show()
-      end
-   end);
-   self:SetSize(_WIDTH-42, _HEIGHT - 50)
-end
 
 function AltinatorAddon:ToggleFrame()
    local f = AltinatorFrame or AltinatorAddon:CreateMainFrame()
@@ -1072,12 +1080,11 @@ function AltinatorAddon:CreateMainFrame()
    AltinatorFrame.ScrollFrame.ScrollBar:SetPoint("TOPLEFT", AltinatorFrame.ScrollFrame, "TOPRIGHT", -5, -16)
    AltinatorFrame.ScrollFrame.ScrollBar:SetPoint("BOTTOMRIGHT", AltinatorFrame.ScrollFrame, "BOTTOMRIGHT", -5, 16)
 
-   local overView, activityView, gearView, searchView, optionsView = CreateTabs(AltinatorFrame, L["Overview"], L["Activity"], L["Gear"], L["Search"], L["Options"])
+   local overView, activityView, gearView, searchView = CreateTabs(AltinatorFrame, L["Overview"], L["Activity"], L["Gear"], L["Search"])
    overView.LoadContent = LoadOverViewFrame
    activityView.LoadContent = LoadActivityViewFrame
    gearView.LoadContent = LoadGearViewFrame
    searchView.LoadContent = LoadSearchViewFrame
-   optionsView.LoadContent = LoadOptionsViewFrame
 
    Tab_OnClick(_G["AltinatorFrameTab1"])
    AltinatorFrame:Hide()
