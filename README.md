@@ -5,13 +5,13 @@ It's still in Alpha but feel free to try it out and report any issues.
 
 # Screenshots
 ## Overview
-![Overview](https://raw.github.com/Ozafy/Altinator/main/Overview.png)
+![Overview](https://raw.github.com/Ozafy/Altinator/main/Screenshots/Overview.png)
 
 ## Activity
-![Activity](https://raw.github.com/Ozafy/Altinator/main/Activity.png)
+![Activity](https://raw.github.com/Ozafy/Altinator/main/Screenshots/Activity.png)
 
 ## Gear
-![Gear](https://raw.github.com/Ozafy/Altinator/main/Gear.png)
+![Gear](https://raw.github.com/Ozafy/Altinator/main/Screenshots/Gear.png)
 
 ## Search
-![Search](https://raw.github.com/Ozafy/Altinator/main/Search.png)
+![Search](https://raw.github.com/Ozafy/Altinator/main/Screenshots/Search.png)
