@@ -212,7 +212,7 @@ function AltinatorAddon:OnInitialize()
    self:RegisterEvent("PLAYER_ENTERING_WORLD")
    self:RegisterEvent("PLAYER_LOGOUT")
    self:RegisterEvent("TIME_PLAYED_MSG")
-   self:RegisterEvent("MAIL_CLOSED")
+   self:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_HIDE")
    self:RegisterEvent("PLAYER_MONEY")
    self:RegisterEvent("PLAYER_LEVEL_UP")
    self:RegisterEvent("PLAYER_XP_UPDATE")
@@ -226,7 +226,7 @@ function AltinatorAddon:OnDisable()
    self:UnregisterEvent("PLAYER_ENTERING_WORLD")
    self:UnregisterEvent("PLAYER_LOGOUT")
    self:UnregisterEvent("TIME_PLAYED_MSG")
-   self:UnregisterEvent("MAIL_CLOSED")
+   self:UnregisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_HIDE")
    self:UnregisterEvent("PLAYER_MONEY")
    self:UnregisterEvent("PLAYER_LEVEL_UP")
    self:UnregisterEvent("PLAYER_XP_UPDATE")
@@ -244,8 +244,10 @@ function AltinatorAddon:PLAYER_LOGOUT()
    SavePlayerDataLogout()
 end
 
-function AltinatorAddon:MAIL_CLOSED()
-   ClearPlayerMailData()
+function AltinatorAddon:PLAYER_INTERACTION_MANAGER_FRAME_HIDE(self, type)
+   if(type == 17) then
+      ClearPlayerMailData()
+   end
 end
 
 function AltinatorAddon:TIME_PLAYED_MSG(self, total, level)
@@ -1103,8 +1105,12 @@ function AltinatorLDB:OnTooltipShow(tooltip)
       local money = char.Money
       totalmoney = totalmoney + money
       local cr, cg, cb, ca = GetClassColor(char.Class.File)
-      self:AddDoubleLine(char.Name, MoneyToGoldString(char.Money), cr, cg, cb)
-      self:AddTexture("Interface\\ICONS\\Achievement_character_" .. char.Race.File .. "_" .. C["Genders"][char.Sex])
+      local factionTexture = "Interface\\ICONS\\inv_bannerpvp_01"
+      if(char.Faction == "Alliance") then
+         factionTexture = "Interface\\ICONS\\inv_bannerpvp_02"
+      end
+      local raceTexture = "Interface\\ICONS\\Achievement_character_" .. char.Race.File .. "_" .. C["Genders"][char.Sex]
+      self:AddDoubleLine("|T"..factionTexture..":0|t" .. "|T"..raceTexture..":0|t " .. char.Name .. " (" .. char.Level .. ")", MoneyToGoldString(char.Money), cr, cg, cb)
    end
    self:AddLine(" ")
    self:AddDoubleLine("Total", MoneyToGoldString(totalmoney))

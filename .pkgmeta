@@ -1,0 +1,5 @@
+package-as: Altinator
+ignore:
+  - README.md
+  - Screenshots
+license-output: LICENSE
