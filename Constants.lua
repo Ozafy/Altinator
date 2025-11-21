@@ -61,3 +61,14 @@ function C:GetEquipmentSlotIcon(index)
 		return "Interface\\PaperDoll\\UI-PaperDoll-Slot-" .. C["EquipmentSlotIcons"][index]
 	end
 end
+
+C["ResetTimes"] = {
+	[1] = {
+		day = 3,
+		hour = 15,
+	},
+	[3] = {
+		day = 4,
+		hour = 4,
+	},
+}

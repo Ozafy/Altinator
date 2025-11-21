@@ -80,6 +80,10 @@ local function SavePlayerDataLogin()
    data.Rank = data.Rank or {}
    data.Rank.Value = UnitPVPRank("player")
    data.Rank.Name = GetPVPRankInfo(data.Rank.Value)
+   local hk, points = GetPVPSessionStats()
+   data.Honour = data.Honour or {}
+   data.Honour.HKs = hk
+   data.Honour.Points = points
 
    data.Money = GetMoney()
    data.LastLogin = time()
@@ -435,6 +439,24 @@ function LongTimeSpanToString(span)
    return timeString
 end
 
+local function GetLastReset()
+   local reset = C["ResetTimes"][GetCurrentRegion()]
+   local weekday = C_DateAndTime.GetCurrentCalendarTime().weekday
+   local today = time()
+   local daysBack = (weekday + 7 - reset.day) % 7
+   local lastReset = today - (daysBack * 86400)
+   local resetHour = reset.hour
+   local lastResetDate = date("*t", lastReset)
+   lastResetDate.hour = resetHour
+   lastResetDate.min = 0
+   lastResetDate.sec = 0
+   lastReset = time(lastResetDate)
+   if lastReset > today then
+      lastReset = lastReset - (7 * 86400)
+   end
+   return lastReset
+end
+
 local function CreateInnerBorder(frame, itemQuality)
    local iborder = frame.iborder or CreateFrame("Frame", nil, frame, "BackdropTemplate")
    frame.iborder = iborder
@@ -454,7 +476,7 @@ local function CreateInnerBorder(frame, itemQuality)
 	return frame.iborder
 end
 
-local function CreateProfessionTexture(contentFrame, charIndex, anchor, baseOffset, profIndex, id, profession)
+local function CreateProfessionTexture(contentFrame, charIndex, anchor, baseOffset, iconSize, profIndex, id, profession)
    local profPosition = profIndex
    if C["SecondairyProfession"][id] then
       profPosition = C["SecondairyProfessionOrder"][id] + 1 -- secondairy professions start after 2 normal professions
@@ -462,8 +484,8 @@ local function CreateProfessionTexture(contentFrame, charIndex, anchor, baseOffs
    contentFrame.ProfessionIcons = contentFrame.ProfessionIcons or {}
    contentFrame.ProfessionIcons[charIndex] = contentFrame.ProfessionIcons[charIndex] or {}
    contentFrame.ProfessionIcons[charIndex][profIndex] = contentFrame.ProfessionIcons[charIndex][profIndex] or contentFrame:CreateTexture("Profession_Icon_" .. id, "BACKGROUND")
-   contentFrame.ProfessionIcons[charIndex][profIndex]:SetWidth(15)
-   contentFrame.ProfessionIcons[charIndex][profIndex]:SetHeight(15)
+   contentFrame.ProfessionIcons[charIndex][profIndex]:SetWidth(iconSize)
+   contentFrame.ProfessionIcons[charIndex][profIndex]:SetHeight(iconSize)
    contentFrame.ProfessionIcons[charIndex][profIndex]:SetPoint("LEFT", anchor,"LEFT", baseOffset + (profPosition * 80), 0)
    contentFrame.ProfessionIcons[charIndex][profIndex]:SetTexture("Interface\\ICONS\\" .. profession.File)
 
@@ -474,9 +496,63 @@ local function CreateProfessionTexture(contentFrame, charIndex, anchor, baseOffs
    contentFrame.ProfessionTexts[charIndex][profIndex]:SetText(profession.Skill.."/"..profession.SkillMax)
 end
 
+local function GetCharacterIcons(char)
+   local faction = "h"
+   local factionIcon = "inv_bannerpvp_01"
+   local showRank = false
+   if(char.Faction == "Alliance") then
+      faction = "a"
+      factionIcon = "inv_bannerpvp_02"
+   end
+   if(char.Rank and char.Rank.Value>=5) then
+      factionIcon = "achievement_pvp_" .. faction .. "_"..string.format("%02d", char.Rank.Value-4)
+      showRank = true
+   end
+   factionIcon = "Interface\\ICONS\\" .. factionIcon
+   local raceIcon = "Interface\\ICONS\\Achievement_character_" .. char.Race.File .. "_" .. C["Genders"][char.Sex]
+   local classIcon = "Interface\\ICONS\\classicon_" .. char.Class.File
+   return factionIcon, raceIcon, classIcon, showRank
+end
+
+local function CreateCharacterName(contentFrame, charIndex, char, anchor, baseOffset, iconSize)
+   contentFrame.FactionIcons[charIndex] = contentFrame.FactionIcons[charIndex] or contentFrame:CreateTexture("Faction_Icon_" .. charIndex, "BACKGROUND")
+   contentFrame.FactionIcons[charIndex]:SetSize(iconSize, iconSize)
+   contentFrame.FactionIcons[charIndex]:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, baseOffset * -1 * charIndex)
+   local factionIcon, raceIcon, classIcon, showRank = GetCharacterIcons(char)
+   if showRank then
+      contentFrame.FactionIcons[charIndex]:SetScript("OnEnter", function(self)
+         AltinatorTooltip:SetOwner(contentFrame, "ANCHOR_CURSOR")
+         AltinatorTooltip:SetText(char.Rank.Name)
+      end)
+      contentFrame.FactionIcons[charIndex]:SetScript("OnLeave", function(self)
+         AltinatorTooltip:Hide()
+      end)
+   else
+      contentFrame.FactionIcons[charIndex]:SetScript("OnEnter", nil)
+      contentFrame.FactionIcons[charIndex]:SetScript("OnLeave", nil)
+   end
+   contentFrame.FactionIcons[charIndex]:SetTexture(factionIcon)
+
+   contentFrame.RaceIcons[charIndex] = contentFrame.RaceIcons[charIndex] or contentFrame:CreateTexture("Race_Icon_" .. charIndex, "BACKGROUND")
+   contentFrame.RaceIcons[charIndex]:SetSize(iconSize, iconSize)
+   contentFrame.RaceIcons[charIndex]:SetPoint("LEFT", contentFrame.FactionIcons[charIndex], "LEFT", 15, 0)
+   contentFrame.RaceIcons[charIndex]:SetTexture(raceIcon)
+
+   contentFrame.ClassIcons[charIndex] = contentFrame.ClassIcons[charIndex] or contentFrame:CreateTexture("Class_Icon_" .. charIndex, "BACKGROUND")
+   contentFrame.ClassIcons[charIndex]:SetSize(iconSize, iconSize)
+   contentFrame.ClassIcons[charIndex]:SetPoint("LEFT", contentFrame.RaceIcons[charIndex], "LEFT", 15, 0)
+   contentFrame.ClassIcons[charIndex]:SetTexture(classIcon)
+
+   contentFrame.CharNames[charIndex] = contentFrame.CharNames[charIndex] or contentFrame:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+   contentFrame.CharNames[charIndex]:SetPoint("LEFT", contentFrame.ClassIcons[charIndex], "LEFT", 20, 0)
+   contentFrame.CharNames[charIndex]:SetText(char.Name)
+   local cr, cg, cb, web = GetClassColor(char.Class.File)
+   contentFrame.CharNames[charIndex]:SetTextColor(cr, cg, cb)
+end
+
 local function LoadOverViewFrame(self)
-   local ICON_HEIGHT = 15
-   local ROW_HEIGHT = ICON_HEIGHT + 5
+   local ICON_SIZE = 15
+   local ROW_HEIGHT = ICON_SIZE + 5
 
    self.NameHeader = self.NameHeader or self:CreateFontString("HeaderName", "ARTWORK", "GameFontHighlight")
    self.NameHeader:SetPoint("TOPLEFT", 5, -10)
@@ -510,45 +586,7 @@ local function LoadOverViewFrame(self)
    self.LevelTexts = self.LevelTexts or {}
    for i, name in ipairs(characters) do
       local char = AltinatorDB.global.characters[name]
-      self.FactionIcons[i] = self.FactionIcons[i] or self:CreateTexture("Faction_Icon_" .. i, "BACKGROUND")
-      self.FactionIcons[i]:SetSize(ICON_HEIGHT, ICON_HEIGHT)
-      self.FactionIcons[i]:SetPoint("TOPLEFT", self.NameHeader, "BOTTOMLEFT", 0, ROW_HEIGHT * -1 * (totalCharacters+1))
-      local f = "h"
-      local banner = "inv_bannerpvp_01"
-      if(char.Faction == "Alliance") then
-         f = "a"
-         banner = "inv_bannerpvp_02"
-      end
-      if(char.Rank and char.Rank.Value>=5) then
-         banner = "achievement_pvp_" .. f .. "_"..string.format("%02d", char.Rank.Value-4)
-         self.FactionIcons[i]:SetScript("OnEnter", function(self)
-            AltinatorTooltip:SetOwner(self, "ANCHOR_CURSOR")
-            AltinatorTooltip:SetText(char.Rank.Name)
-         end)
-         self.FactionIcons[i]:SetScript("OnLeave", function(self)
-            AltinatorTooltip:Hide()
-         end)
-      else
-         self.FactionIcons[i]:SetScript("OnEnter", nil)
-         self.FactionIcons[i]:SetScript("OnLeave", nil)
-      end
-      self.FactionIcons[i]:SetTexture("Interface\\ICONS\\" .. banner)
-
-      self.RaceIcons[i] = self.RaceIcons[i] or self:CreateTexture("Race_Icon_" .. i, "BACKGROUND")
-      self.RaceIcons[i]:SetSize(ICON_HEIGHT, ICON_HEIGHT)
-      self.RaceIcons[i]:SetPoint("LEFT", self.FactionIcons[i], "LEFT", 15, 0)
-      self.RaceIcons[i]:SetTexture("Interface\\ICONS\\Achievement_character_" .. char.Race.File .. "_" .. C["Genders"][char.Sex])
-
-      self.ClassIcons[i] = self.ClassIcons[i] or self:CreateTexture("Class_Icon_" .. i, "BACKGROUND")
-      self.ClassIcons[i]:SetSize(ICON_HEIGHT, ICON_HEIGHT)
-      self.ClassIcons[i]:SetPoint("LEFT", self.RaceIcons[i], "LEFT", 15, 0)
-      self.ClassIcons[i]:SetTexture("Interface\\ICONS\\classicon_" .. char.Class.File)
-
-      self.CharNames[i] = self.CharNames[i] or self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-      self.CharNames[i]:SetPoint("LEFT", self.ClassIcons[i], "LEFT", 20, 0)
-      self.CharNames[i]:SetText(char.Name)
-      local cr, cg, cb, web = GetClassColor(char.Class.File)
-      self.CharNames[i]:SetTextColor(cr, cg, cb)
+      CreateCharacterName(self, i, char, self.NameHeader, ROW_HEIGHT, ICON_SIZE)
 
       self.GuildNames[i] = self.GuildNames[i] or self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
       self.GuildNames[i]:SetPoint("LEFT", self.FactionIcons[i], "LEFT", 165, 0)
@@ -586,11 +624,11 @@ local function LoadOverViewFrame(self)
 
       local profIndex = 0;
       for id, profession in pairs(char.Professions) do
-         CreateProfessionTexture(self, i, self.FactionIcons[i], 585, profIndex, id, profession)
+         CreateProfessionTexture(self, i, self.FactionIcons[i], 585, ICON_SIZE, profIndex, id, profession)
          profIndex = profIndex+1
       end
       for id, profession in pairs(char.ProfessionsSecondairy) do
-         CreateProfessionTexture(self, i, self.FactionIcons[i], 585, profIndex, id, profession)
+         CreateProfessionTexture(self, i, self.FactionIcons[i], 585, ICON_SIZE, profIndex, id, profession)
          profIndex = profIndex+1
       end
       totalCharacters = totalCharacters + 1
@@ -609,8 +647,8 @@ end
 
 local function LoadActivityViewFrame(self)
    if Syndicator and Syndicator.API.IsReady() then
-      local ICON_HEIGHT = 15
-      local ROW_HEIGHT = ICON_HEIGHT + 5
+      local ICON_SIZE = 15
+      local ROW_HEIGHT = ICON_SIZE + 5
 
       local data = AltinatorAddon.CurrentCharacter
 
@@ -634,6 +672,10 @@ local function LoadActivityViewFrame(self)
       self.LastLogoutHeader:SetPoint("LEFT", self.PlayedHeader, "LEFT", 150, 0)
       self.LastLogoutHeader:SetText(L["LastLogout"])
 
+      self.HonourHeader = self.HonourHeader or self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+      self.HonourHeader:SetPoint("LEFT", self.LastLogoutHeader, "LEFT", 150, 0)
+      self.HonourHeader:SetText(L["Honour"])
+
       local currentTime = time()
       local totalCharacters = 0
       local totalMail = 0
@@ -649,34 +691,12 @@ local function LoadActivityViewFrame(self)
       self.AuctionTexts = self.AuctionTexts or {}
       self.PlayedTexts = self.PlayedTexts or {}
       self.LastPlayed = self.LastPlayed or {}
+      self.HonourTexts = self.HonourTexts or {}
       for i, name in ipairs(characters) do
          local char = AltinatorDB.global.characters[name]
          local charSyndicator = Syndicator.API.GetByCharacterFullName(name)
          if charSyndicator then
-            self.FactionIcons[i] = self.FactionIcons[i] or self:CreateTexture("Faction_Icon_" .. i, "BACKGROUND")
-            self.FactionIcons[i]:SetSize(ICON_HEIGHT, ICON_HEIGHT)
-            self.FactionIcons[i]:SetPoint("TOPLEFT", self.NameHeader, "BOTTOMLEFT", 0, ROW_HEIGHT * -1 * (totalCharacters+1))
-            local banner = "inv_bannerpvp_01"
-            if(char.Faction == "Alliance") then
-               banner = "inv_bannerpvp_02"
-            end
-            self.FactionIcons[i]:SetTexture("Interface\\ICONS\\" .. banner)
-
-            self.RaceIcons[i] = self.RaceIcons[i] or self:CreateTexture("Race_Icon_" .. i, "BACKGROUND")
-            self.RaceIcons[i]:SetSize(ICON_HEIGHT, ICON_HEIGHT)
-            self.RaceIcons[i]:SetPoint("LEFT", self.FactionIcons[i], "LEFT", 15, 0)
-            self.RaceIcons[i]:SetTexture("Interface\\ICONS\\Achievement_character_" .. char.Race.File .. "_" .. C["Genders"][char.Sex])
-
-            self.ClassIcons[i] = self.ClassIcons[i] or self:CreateTexture("Class_Icon_" .. i, "BACKGROUND")
-            self.ClassIcons[i]:SetSize(ICON_HEIGHT, ICON_HEIGHT)
-            self.ClassIcons[i]:SetPoint("LEFT", self.RaceIcons[i], "LEFT", 15, 0)
-            self.ClassIcons[i]:SetTexture("Interface\\ICONS\\classicon_" .. char.Class.File)
-
-            self.CharNames[i] = self.CharNames[i] or self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-            self.CharNames[i]:SetPoint("LEFT", self.ClassIcons[i], "LEFT", 20, 0)
-            self.CharNames[i]:SetText(char.Name)
-            local cr, cg, cb, web = GetClassColor(char.Class.File)
-            self.CharNames[i]:SetTextColor(cr, cg, cb)
+            CreateCharacterName(self, i, char, self.NameHeader, ROW_HEIGHT, ICON_SIZE)
 
             self.MailTexts[i] = self.MailTexts[i] or self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
             self.MailTexts[i]:SetPoint("LEFT", self.FactionIcons[i], "LEFT", 165, 0)
@@ -719,12 +739,28 @@ local function LoadActivityViewFrame(self)
             self.PlayedTexts[i]:SetText(char.TimePlayed and LongTimeSpanToString(char.TimePlayed.Total) or "")
             totalPlayed = totalPlayed + (char.TimePlayed and char.TimePlayed.Total or 0)
 
+            local lastPlayed = (char.LastLogout or char.LastLogin)
             self.LastPlayed[i] = self.LastPlayed[i] or self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
             self.LastPlayed[i]:SetPoint("LEFT", self.FactionIcons[i], "LEFT", 615, 0)
             if name == data.FullName then
                self.LastPlayed[i]:SetText("\124cnGREEN_FONT_COLOR:" .. L["Online"] .. "\124r")
             else
-               self.LastPlayed[i]:SetText(ShortTimeSpanToString(currentTime - (char.LastLogout or char.LastLogin)))
+               self.LastPlayed[i]:SetText(ShortTimeSpanToString(currentTime - lastPlayed))
+            end
+
+            self.HonourTexts[i] = self.HonourTexts[i] or self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+            self.HonourTexts[i]:SetPoint("LEFT", self.FactionIcons[i], "LEFT", 765, 0)
+            char.Honour = char.Honour or { HKs = 0, Points = 0 }
+            
+            if GetLastReset() > lastPlayed then
+               char.Honour.HKs = 0
+               char.Honour.Points = 0
+            end
+
+            if char.Honour.HKs>=15 then
+               self.HonourTexts[i]:SetText(char.Honour.Points)
+            else
+               self.HonourTexts[i]:SetText(L["HonourNotEnoughKills"] .. " (" .. char.Honour.HKs .. "/15)")
             end
 
             totalCharacters = totalCharacters + 1
@@ -1102,15 +1138,11 @@ function AltinatorLDB:OnTooltipShow(tooltip)
    local characters = GetRealmCharactersSorted()
    for i, name in ipairs(characters) do
       local char = AltinatorDB.global.characters[name]
+      local factionIcon, raceIcon, classIcon, showRank = GetCharacterIcons(char)
       local money = char.Money
       totalmoney = totalmoney + money
       local cr, cg, cb, ca = GetClassColor(char.Class.File)
-      local factionTexture = "Interface\\ICONS\\inv_bannerpvp_01"
-      if(char.Faction == "Alliance") then
-         factionTexture = "Interface\\ICONS\\inv_bannerpvp_02"
-      end
-      local raceTexture = "Interface\\ICONS\\Achievement_character_" .. char.Race.File .. "_" .. C["Genders"][char.Sex]
-      self:AddDoubleLine("|T"..factionTexture..":0|t" .. "|T"..raceTexture..":0|t " .. char.Name .. " (" .. char.Level .. ")", MoneyToGoldString(char.Money), cr, cg, cb)
+      self:AddDoubleLine("|T"..factionIcon..":0|t" .. "|T"..raceIcon..":0|t".. "|T"..classIcon..":0|t" .. " " .. char.Name .. " (" .. char.Level .. ")", MoneyToGoldString(char.Money), cr, cg, cb)
    end
    self:AddLine(" ")
    self:AddDoubleLine("Total", MoneyToGoldString(totalmoney))
