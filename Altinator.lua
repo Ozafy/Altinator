@@ -772,15 +772,18 @@ local function LoadActivityViewFrame(self)
             self.MailTexts[i] = self.MailTexts[i] or self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
             self.MailTexts[i]:SetPoint("LEFT", self.FactionIcons[i], "LEFT", 165, 0)
             local charMails = 0
+            local charMailsInTransit = 0
             char.Mail = char.Mail or {}
             for i=#char.Mail,1,-1 do
                if char.Mail[i].ArrivalTime < time() then
                   charMails = charMails + 1
+               else
+                  charMailsInTransit = charMailsInTransit + 1
                end
             end
-            totalMail = totalMail + charMails
+            totalMail = totalMail + charMails + charMailsInTransit
             if charMails>0 then
-               self.MailTexts[i]:SetText("\124cnGREEN_FONT_COLOR:" .. charMails .. "\124r")
+               self.MailTexts[i]:SetText("\124cnGREEN_FONT_COLOR:" .. charMails .. "\124r (\124cnYELLOW_FONT_COLOR:" .. charMailsInTransit .. "\124r)")
             else
                self.MailTexts[i]:SetText(charMails)
             end
