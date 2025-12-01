@@ -374,29 +374,14 @@ end
 
 local GameTooltipReady = false
 
-local function GameTooltip_OnTooltipSetItem(tooltip)
-   if not GameTooltipReady then
-      return
-   end
-   GameTooltipReady = false
-	local _, link = tooltip:GetItem()
-	if not link then return; end
-	
-	local itemString = link:match("item[%-?%d:]+")
+local function GameTooltip_Add(tooltip, itemLink)
+
+	local itemString = itemLink:match("item[%-?%d:]+")
 	local _, itemId = strsplit(":", itemString)
 
-	if itemId == "0" and TradeSkillFrame ~= nil and TradeSkillFrame:IsVisible() then
-		if (GetMouseFocus():GetName()) == "TradeSkillSkillIcon" then
-			itemId = GetTradeSkillItemLink(TradeSkillFrame.selectedSkill):match("item:(%d+):") or nil
-		else
-			for i = 1, 8 do
-				if (GetMouseFocus():GetName()) == "TradeSkillReagent"..i then
-					itemId = GetTradeSkillReagentItemLink(TradeSkillFrame.selectedSkill, i):match("item:(%d+):") or nil
-					break
-				end
-			end
-		end
-	end
+   if not itemId or itemId == "" or itemId == "0" then
+      return
+   end
 
    local name, _, _, _, _, _, _, _, _, _, _, classId, subclassID = GetItemInfo(tonumber(itemId))
    if classId ~= C["RecipeClassId"] then
@@ -406,7 +391,7 @@ local function GameTooltip_OnTooltipSetItem(tooltip)
    local success, spellId, createdItemId = pcall(function()
       return recipeLib:GetRecipeInfo(tonumber(itemId))
    end)
-   local requiredSkill = GetRecipeLevel(link)
+   local requiredSkill = GetRecipeLevel(itemLink)
    if success then
       if spellId or itemId then
          local knownChars, couldLearnChars, knownText, learnText
@@ -476,8 +461,25 @@ local function GameTooltip_OnTooltipSetItem(tooltip)
    end
 end
 
+local function GameTooltip_OnTooltipSetItem(tooltip)
+   if not GameTooltipReady then
+      return
+   end
+   GameTooltipReady = false
+	local _, link = tooltip:GetItem()
+	if not link then return; end
+	
+	GameTooltip_Add(tooltip, link)
+end
+
 local function GameTooltip_OnTooltipCleared(tooltip)
    GameTooltipReady = true
+end
+
+local function GameTooltip_SetCraftItem(tooltip, recipeIndex, reagentIndex)
+	local link = GetCraftReagentItemLink(recipeIndex, reagentIndex)
+	if not link then return; end
+	GameTooltip_Add(tooltip, link)
 end
 
 function AltinatorAddon:OnInitialize()
@@ -517,6 +519,7 @@ function AltinatorAddon:OnInitialize()
    GameTooltipReady = true
    GameTooltip:HookScript("OnTooltipSetItem", GameTooltip_OnTooltipSetItem)
    GameTooltip:HookScript("OnTooltipCleared", GameTooltip_OnTooltipCleared)
+   hooksecurefunc(GameTooltip, "SetCraftItem", GameTooltip_SetCraftItem)
 end
 
 function AltinatorAddon:OnDisable()
@@ -1457,14 +1460,15 @@ function AltinatorAddon:CreateMainFrame()
    AltinatorFrameClose:SetScript("OnClick", function()
       AltinatorFrame:Hide()
    end)
+   AltinatorFrame:SetClampedToScreen(true)
    AltinatorFrame:EnableMouse(true)
    AltinatorFrame:SetMovable(true)
    AltinatorFrame:RegisterForDrag("LeftButton")
    AltinatorFrame:SetScript("OnDragStart", function(self)
-      self:StartMoving()
+      AltinatorFrame:StartMoving()
    end)
    AltinatorFrame:SetScript("OnDragStop", function(self)
-      self:StopMovingOrSizing()
+      AltinatorFrame:StopMovingOrSizing()
    end)
 
    AltinatorFrame:SetScript("OnShow", function()
@@ -1483,11 +1487,9 @@ function AltinatorAddon:CreateMainFrame()
 
    AltinatorFrame.ScrollFrame = CreateFrame("ScrollFrame", "AltinatorScrollFrame", AltinatorFrame, "UIPanelScrollFrameTemplate")
    AltinatorFrame.ScrollFrame:SetPoint("TOPLEFT", AltinatorFrameDialogBG, "TOPLEFT", 4, -8)
-   AltinatorFrame.ScrollFrame:SetPoint("BOTTOMRIGHT", AltinatorFrameDialogBG, "BOTTOMRIGHT", -4, 4)
+   AltinatorFrame.ScrollFrame:SetPoint("BOTTOMRIGHT", AltinatorFrameDialogBG, "BOTTOMRIGHT", -24, 2)
    AltinatorFrame.ScrollFrame:SetScript("OnMouseWheel", ScrollFrame_OnMouseWheel)
-   AltinatorFrame.ScrollFrame.ScrollBar:ClearAllPoints();
-   AltinatorFrame.ScrollFrame.ScrollBar:SetPoint("TOPLEFT", AltinatorFrame.ScrollFrame, "TOPRIGHT", -5, -16)
-   AltinatorFrame.ScrollFrame.ScrollBar:SetPoint("BOTTOMRIGHT", AltinatorFrame.ScrollFrame, "BOTTOMRIGHT", -5, 16)
+   AltinatorFrame.ScrollFrame:EnableMouse(true)
 
    local overView, activityView, gearView, searchView = CreateTabs(AltinatorFrame, L["Overview"], L["Activity"], L["Gear"], L["Search"])
    overView.LoadContent = LoadOverViewFrame
