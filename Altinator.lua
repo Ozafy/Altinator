@@ -40,7 +40,7 @@ function MergeObjects(mergeInto, mergeFrom)
     return mergeInto
 end
 
-local function OnSettingChanged(setting, value)
+local function OnMinimapSettingChanged(setting, value)
    if value then
       AltinatorDB.profile.minimap.hide = true
       icon:Hide("Altinator")
@@ -50,18 +50,86 @@ local function OnSettingChanged(setting, value)
    end
 end
 
+local charToDelete = ""
+
+local function GetCharacterToDelete()
+   return charToDelete
+end
+
+local function SetCharacterToDelete(value)
+   charToDelete = value
+end
+
+local function GetAllCharactersSortedByRealm()
+   local characterNames = {}
+   for key, char in pairs(AltinatorDB.global.characters) do
+         table.insert(characterNames, char.Realm .. "-" .. char.Name)
+   end
+   table.sort(characterNames)
+
+   local container = Settings.CreateControlTextContainer()
+   container:Add("", L["OptionSelectCharacter"])
+   for i, char in ipairs(characterNames) do
+         container:Add(char, char)
+   end
+   return container:GetData()
+end
+
+local function DeleteCharacter()
+   if charToDelete == "" then
+      return
+   else
+      local realm, name = strsplit("-", charToDelete, 2)
+      local char = AltinatorDB.global.characters[name .. "-" .. realm]
+      if char == nil then
+         print("Character '" .. name .. "' from realm '" .. realm .. "' not found in Altinator database.")
+         Settings.SetValue("Altinator_Character_To_Delete", "")
+         return
+      end
+      local cr, cg, cb, web = GetClassColor(char.Class.File)
+      print("Deleting '\124c" .. web .. name .. "\124r' from realm '" .. realm .. "' from Altinator database.")
+      AltinatorDB.global.characters[name .. "-" .. realm] = nil
+      Settings.SetValue("Altinator_Character_To_Delete", "")
+   end
+end
 
 local function LoadOptionsViewFrame()
-	local name = L["OptionMinimap"]
-	local variable = "Altinator_Minimap_Toggle"
-	local variableKey = "hide"
-	local variableTbl = AltinatorDB.profile.minimap
-	local defaultValue = false
-	local setting = Settings.RegisterAddOnSetting(AltinatorSettingsCategory, variable, variableKey, variableTbl, type(defaultValue), name, defaultValue)
-	setting:SetValueChangedCallback(OnSettingChanged)
+	local minimapSetting = Settings.RegisterAddOnSetting(
+      AltinatorSettingsCategory,
+      "Altinator_Minimap_Toggle",
+      "hide",
+      AltinatorDB.profile.minimap,
+      Settings.VarType.Boolean,
+      L["OptionMinimap"],
+      Settings.Default.False
+   )
+	minimapSetting:SetValueChangedCallback(OnMinimapSettingChanged)
+	Settings.CreateCheckbox(AltinatorSettingsCategory, minimapSetting, L["OptionMinimap"])
 
-	local tooltip = L["OptionMinimap"]
-	Settings.CreateCheckbox(AltinatorSettingsCategory, setting, tooltip)
+	local deleteCharacterSetting = Settings.RegisterProxySetting(
+		AltinatorSettingsCategory,
+		"Altinator_Character_To_Delete",
+		Settings.VarType.String,
+		L["OptionSelectCharacterToDelete"],
+		"",
+		GetCharacterToDelete,
+		SetCharacterToDelete
+	)
+	Settings.CreateDropdown(AltinatorSettingsCategory, deleteCharacterSetting, GetAllCharactersSortedByRealm)
+
+	local deleteButtonInitializer = CreateSettingsButtonInitializer(
+		L["OptionDeleteSelected"], -- name
+		L["OptionDelete"], -- buttonText
+		DeleteCharacter,
+		L["OptionDeleteTooltip"],
+		true,
+		nil,
+		nil
+	)
+
+	local addonLayout = SettingsPanel:GetLayout(AltinatorSettingsCategory)
+	addonLayout:AddInitializer(deleteButtonInitializer)
+
    Settings.RegisterAddOnCategory(AltinatorSettingsCategory)
 end
 
@@ -202,6 +270,9 @@ function AltinatorAddon:OnInitialize()
 			minimap = {
 				hide = false,
 			},
+         selectedCharacter = {
+            delete = false,
+         }
 		},
       global = {
          characters = {}
@@ -607,7 +678,7 @@ local function LoadOverViewFrame(self)
       local level = char.Level
       if level~=60 then
          --local RestPercent = (char.XP.Rested/char.XP.Needed * 100)
-         local tmpRested = char.XP.Rested
+         local tmpRested = char.XP.Rested or 0
          local timeResting = (time() - (char.LastLogout or char.LastLogin) )/3600
          local multiplier = C["RestedXPTimeSpan"]
          if not char.Resting then
