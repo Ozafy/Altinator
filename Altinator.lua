@@ -782,7 +782,7 @@ local function LoadActivityViewFrame(self)
                end
             end
             totalMail = totalMail + charMails + charMailsInTransit
-            if charMails>0 then
+            if charMails>0 or charMailsInTransit>0 then
                self.MailTexts[i]:SetText("\124cnGREEN_FONT_COLOR:" .. charMails .. "\124r (\124cnYELLOW_FONT_COLOR:" .. charMailsInTransit .. "\124r)")
             else
                self.MailTexts[i]:SetText(charMails)
