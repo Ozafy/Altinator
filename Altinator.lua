@@ -7,7 +7,7 @@ local _ZINDEX = 9000
 local L = LibStub("AceLocale-3.0"):GetLocale("Altinator")
 local C = Addon.C
 
-local AltinatorAddon = LibStub("AceAddon-3.0"):NewAddon("Altinator", "AceEvent-3.0")
+local AltinatorAddon = LibStub("AceAddon-3.0"):NewAddon("Altinator", "AceEvent-3.0", "AceTimer-3.0")
 local AltinatorLDB = LibStub("LibDataBroker-1.1"):NewDataObject("Altinator", {  
 	type = "data source",  
 	text = "Altinator",  
@@ -15,9 +15,11 @@ local AltinatorLDB = LibStub("LibDataBroker-1.1"):NewDataObject("Altinator", {
 	OnClick = function() AltinatorAddon.ToggleFrame() end,  
 }) 
 local icon = LibStub("LibDBIcon-1.0")
+local recipeLib = LibStub("LibRecipes-3.0")
 local AltinatorDB
 local AltinatorFrame
 local AltinatorTooltip
+local AltinatorCache = {}
 local AltinatorSettingsCategory = Settings.RegisterVerticalLayoutCategory("Altinator")
 SLASH_ALTINATOR1, SLASH_ALTINATOR2 = "/alt", "/altinator"
 
@@ -189,17 +191,21 @@ local function SavePlayerDataLogin()
       local profId=profNames_rev[name]
       skillsFound = skillsFound + 1
       if C["SecondairyProfession"][profId] then
-         data.ProfessionsSecondairy[profId]={}
+         data.ProfessionsSecondairy[profId]= data.ProfessionsSecondairy[profId] or {}
          data.ProfessionsSecondairy[profId].Name=name
          data.ProfessionsSecondairy[profId].File=C["ProfessionIcons"][profNames_rev[name]]
          data.ProfessionsSecondairy[profId].Skill=skillRank
          data.ProfessionsSecondairy[profId].SkillMax=skillMaxRank
+         data.ProfessionsSecondairy[profId].Spells= data.ProfessionsSecondairy[profId].Spells or {}
+         data.ProfessionsSecondairy[profId].Items= data.ProfessionsSecondairy[profId].Items or {}
       else
-         data.Professions[profId]={}
+         data.Professions[profId]= data.Professions[profId] or {}
          data.Professions[profId].Name=name
          data.Professions[profId].File=C["ProfessionIcons"][profNames_rev[name]]
          data.Professions[profId].Skill=skillRank
          data.Professions[profId].SkillMax=skillMaxRank
+         data.Professions[profId].Spells= data.Professions[profId].Spells or {}
+         data.Professions[profId].Items= data.Professions[profId].Items or {}
       end
     end
    end
@@ -263,6 +269,217 @@ local function SavePlayerGuild()
    data.Guild.Rank=guildRankName
 end
 
+function CountInString(string, pattern)
+    return select(2, string.gsub(base, pattern, ""))
+end
+
+local function GetRealmCharactersSorted()
+   local characterNames = {}
+   local realm = GetNormalizedRealmName()
+   for key, char in pairs(AltinatorDB.global.characters) do
+      if char.Realm == realm then
+         table.insert(characterNames, key)
+      end
+   end
+   table.sort(characterNames)
+   return characterNames
+end
+
+local function GetCharacterProfession(char, profId)
+   return char.Professions[profId] or char.ProfessionsSecondairy[profId] or nil
+end
+
+local function CharacterProfessionRecipeKnownOrLearnable(profId, spellId, itemId)
+   local characters = GetRealmCharactersSorted()
+   local charactersThatKnow = {}
+   local charactersThatCouldLearn = {}
+   for i, name in ipairs(characters) do
+      local char = AltinatorDB.global.characters[name]
+      if char then
+         local prof = GetCharacterProfession(char, profId)
+         if prof then
+            local known = false
+            if spellId and prof.Spells and prof.Spells[spellId] then
+               known = true
+               table.insert(charactersThatKnow, char)
+            end
+            if itemId and prof.Items and prof.Items[itemId] then
+               known = true
+               table.insert(charactersThatKnow, char)
+            end
+            if not known  then
+               table.insert(charactersThatCouldLearn, char)
+            end
+         end
+      end
+   end
+   return charactersThatKnow, charactersThatCouldLearn
+end
+
+local function GetRecipeLevel(link)
+   local AltinatorFrame = AltinatorFrame or AltinatorAddon:CreateMainFrame()
+   AltinatorTooltip:SetOwner(AltinatorFrame, "ANCHOR_LEFT")
+	AltinatorTooltip:ClearLines()
+	AltinatorTooltip:SetHyperlink(link)
+	
+	local tooltipName = AltinatorTooltip:GetName()
+	
+	for i = 2, AltinatorTooltip:NumLines(), 1 do
+		local tooltipText = _G[tooltipName .. "TextLeft" .. i]:GetText()
+		if tooltipText then
+			local _, _, rLevel = string.find(tooltipText, "%((%d+)%)")
+			if rLevel then
+            AltinatorTooltip:Hide()
+            --print("Recipe required level: " .. rLevel)
+				return tonumber(rLevel)
+			end
+		end
+	end
+end
+
+local function CreateCharacterKnownByTooltipLines(chars)
+   local knownBy = {
+      "Already known by:",
+   }
+   if #chars > 0 then
+      for i, char in ipairs(chars) do
+         local cr, cg, cb, web = GetClassColor(char.Class.File)
+         table.insert(knownBy, "\124c" .. web .. char.Name .. "\124r")
+      end
+      return knownBy
+   end
+   return nil
+end
+
+local function CreateCharacterLearnTooltipLines(charsCouldLearn, profId, requiredSkill)
+   local learnedBy = {
+      "Could be learned by:"
+   }
+   if #charsCouldLearn > 0 then
+      for i, char in ipairs(charsCouldLearn) do
+         local cr, cg, cb, web = GetClassColor(char.Class.File)
+         local prof = GetCharacterProfession(char, profId)
+         --print("prof for " .. char.Name .. ": " .. (prof and prof.Name or "nil") .. ", skill: " .. (prof and prof.Skill or "nil") .. ", requiredSkill: " .. (requiredSkill or "nil"))
+         if prof and prof.Skill > requiredSkill then
+            table.insert(learnedBy, "\124c" .. web .. char.Name .. "\124r (" .. prof.Skill .. ")")
+         else
+            table.insert(learnedBy, "\124c" .. web .. char.Name .. "\124r (\124cnIMPOSSIBLE_DIFFICULTY_COLOR:" .. prof.Skill .. "\124r)")
+         end
+         
+      end
+      return learnedBy
+   end
+   return nil
+end
+
+local GameTooltipReady = false
+
+local function GameTooltip_OnTooltipSetItem(tooltip)
+   if not GameTooltipReady then
+      return
+   end
+   GameTooltipReady = false
+	local _, link = tooltip:GetItem()
+	if not link then return; end
+	
+	local itemString = link:match("item[%-?%d:]+")
+	local _, itemId = strsplit(":", itemString)
+
+	if itemId == "0" and TradeSkillFrame ~= nil and TradeSkillFrame:IsVisible() then
+		if (GetMouseFocus():GetName()) == "TradeSkillSkillIcon" then
+			itemId = GetTradeSkillItemLink(TradeSkillFrame.selectedSkill):match("item:(%d+):") or nil
+		else
+			for i = 1, 8 do
+				if (GetMouseFocus():GetName()) == "TradeSkillReagent"..i then
+					itemId = GetTradeSkillReagentItemLink(TradeSkillFrame.selectedSkill, i):match("item:(%d+):") or nil
+					break
+				end
+			end
+		end
+	end
+
+   local name, _, _, _, _, _, _, _, _, _, _, classId, subclassID = GetItemInfo(tonumber(itemId))
+   if classId ~= C["RecipeClassId"] then
+      return
+   end
+   local profId = C["ProfessionSubclassIdToProfessionId"][subclassID]
+   local success, spellId, createdItemId = pcall(function()
+      return recipeLib:GetRecipeInfo(tonumber(itemId))
+   end)
+   local requiredSkill = GetRecipeLevel(link)
+   if success then
+      if spellId or itemId then
+         local knownChars, couldLearnChars, knownText, learnText
+         AltinatorCache.Recipes = AltinatorCache.Recipes or {}
+         if spellId then
+            AltinatorCache.Recipes.Spells = AltinatorCache.Recipes.Spells or {}
+            AltinatorCache.Recipes.Spells[spellId] = AltinatorCache.Recipes.Spells[spellId] or {}
+            if not AltinatorCache.Recipes.Spells[spellId].knownText and not AltinatorCache.Recipes.Spells[spellId].learnText then
+               knownChars, couldLearnChars = CharacterProfessionRecipeKnownOrLearnable(profId, spellId, createdItemId)
+               AltinatorCache.Recipes.Spells[spellId].knownText = CreateCharacterKnownByTooltipLines(knownChars)
+               AltinatorCache.Recipes.Spells[spellId].learnText = CreateCharacterLearnTooltipLines(couldLearnChars, profId, requiredSkill)
+            end
+            knownText = AltinatorCache.Recipes.Spells[spellId].knownText or nil
+            learnText = AltinatorCache.Recipes.Spells[spellId].learnText or nil
+         end
+         if itemId then
+            AltinatorCache.Recipes.Items = AltinatorCache.Recipes.Items or {}
+            AltinatorCache.Recipes.Items[itemId] = AltinatorCache.Recipes.Items[itemId] or {}
+            if not AltinatorCache.Recipes.Items[itemId].knownText and not AltinatorCache.Recipes.Items[itemId].learnText then
+               knownChars, couldLearnChars = knownChars, couldLearnChars or CharacterProfessionRecipeKnownOrLearnable(profId, spellId, createdItemId)
+               AltinatorCache.Recipes.Items[itemId].knownText = CreateCharacterKnownByTooltipLines(knownChars)
+               AltinatorCache.Recipes.Items[itemId].learnText = CreateCharacterLearnTooltipLines(couldLearnChars, profId, requiredSkill)
+            end
+            knownText = AltinatorCache.Recipes.Items[itemId].knownText or nil
+            learnText = AltinatorCache.Recipes.Items[itemId].learnText or nil
+         end
+
+         if not knownText and not learnText then
+            return
+         end
+         tooltip:AddLine(" ")
+         if knownText then
+            tooltip:AddLine(knownText[1])
+            local tempString = ""
+            for i = 2, #knownText do
+               tempString = tempString .. knownText[i]
+               if (i-1)%3 == 0 then
+                  tooltip:AddLine(tempString)
+                  tempString = ""
+               elseif i < #knownText then
+                  tempString = tempString .. ", "
+               end
+            end
+            if tempString ~= "" then
+               tooltip:AddLine(tempString)
+            end
+            tooltip:AddLine(" ")
+         end
+         if learnText then
+            tooltip:AddLine(learnText[1])
+            local tempString = ""
+            for i = 2, #learnText do
+               tempString = tempString .. learnText[i]
+               if (i-1)%3 == 0 then
+                  tooltip:AddLine(tempString)
+                  tempString = ""
+               elseif i < #learnText then
+                  tempString = tempString .. ", "
+               end
+            end
+            if tempString ~= "" then
+               tooltip:AddLine(tempString)
+            end
+            tooltip:AddLine(" ")
+         end
+      end
+   end
+end
+
+local function GameTooltip_OnTooltipCleared(tooltip)
+   GameTooltipReady = true
+end
+
 function AltinatorAddon:OnInitialize()
 	-- Assuming you have a ## SavedVariables: AltinatorDB line in your TOC
 	AltinatorDB = LibStub("AceDB-3.0"):New("AltinatorDB", {
@@ -293,8 +510,13 @@ function AltinatorAddon:OnInitialize()
    self:RegisterEvent("PLAYER_XP_UPDATE")
    self:RegisterEvent("PLAYER_UPDATE_RESTING")
    self:RegisterEvent("PLAYER_GUILD_UPDATE")
+   self:RegisterEvent("TRADE_SKILL_SHOW")
+   self:RegisterEvent("CRAFT_UPDATE")
    LoadOptionsViewFrame()
    RequestTimePlayed()
+   GameTooltipReady = true
+   GameTooltip:HookScript("OnTooltipSetItem", GameTooltip_OnTooltipSetItem)
+   GameTooltip:HookScript("OnTooltipCleared", GameTooltip_OnTooltipCleared)
 end
 
 function AltinatorAddon:OnDisable()
@@ -307,6 +529,8 @@ function AltinatorAddon:OnDisable()
    self:UnregisterEvent("PLAYER_XP_UPDATE")
    self:UnregisterEvent("PLAYER_UPDATE_RESTING")
    self:UnregisterEvent("PLAYER_GUILD_UPDATE")
+   self:UnregisterEvent("TRADE_SKILL_SHOW")
+   self:UnregisterEvent("CRAFT_UPDATE")
 end
 
 function AltinatorAddon:PLAYER_ENTERING_WORLD(self, isLogin, isReload)
@@ -347,6 +571,91 @@ end
 
 function AltinatorAddon:PLAYER_GUILD_UPDATE()
    SavePlayerGuild()
+end
+
+function AltinatorAddon:PLAYER_GUILD_UPDATE()
+   SavePlayerGuild()
+end
+
+function AltinatorAddon:PLAYER_GUILD_UPDATE()
+   SavePlayerGuild()
+end
+
+local function ScanEnchantingRecipes()
+	local tradeskillName = GetCraftDisplaySkillLine()
+   local profNames_rev = tInvert(L["ProfessionIDs"])
+   local profId = 0
+   if profNames_rev[tradeskillName] then
+      profId=profNames_rev[tradeskillName]
+      --print("Tradeskill Name: " .. (tradeskillName or "nil") .. ", profId: " .. (profId or "nil"))
+      for i = 1, GetNumCrafts() do
+         local skillName, _, skillType = GetCraftInfo(i)			-- Ex: Runed Copper Rod
+         local _, _, icon, _, _, _, spellID = GetSpellInfo(skillName)		-- Gets : icon = 135225, spellID = 7421
+         --print(format("name: %s, skillType: %s, spellID: %d, icon: %d", name or "nil", skillType or "nil", spellID or 0, icon or 0))
+         local prof = GetCharacterProfession(AltinatorAddon.CurrentCharacter, profId)
+         if prof then
+            prof.Spells = prof.Spells or {}
+            prof.Spells[spellID] = {
+               Name = skillName,
+               SkillType = skillType,
+               Icon = icon
+            }
+         end
+
+      end
+   end
+end
+
+local function ScanTradeSkills()
+   local tradeskillName = GetTradeSkillLine()
+   local profNames_rev = tInvert(L["ProfessionIDs"])
+   local profId = 0
+   if profNames_rev[tradeskillName] then
+      profId=profNames_rev[tradeskillName]
+      --print("Tradeskill Name: " .. (tradeskillName or "nil") .. ", profId: " .. (profId or "nil"))
+      local numTradeSkills = GetNumTradeSkills()
+      local skillName, skillType, _, _, altVerb = GetTradeSkillInfo(1)	-- test the first line and abort if not valid
+      if not tradeskillName or not numTradeSkills
+         or	tradeskillName == "UNKNOWN"
+         or	numTradeSkills == 0
+         or (skillType ~= "header" and skillType ~= "subheader") then
+         return
+      end
+
+      for i = 1, numTradeSkills do
+         local link
+         local itemID
+         local craftInfo
+         skillName, skillType, _, _, altVerb = GetTradeSkillInfo(i)
+         local cooldown = GetTradeSkillCooldown(i)
+         link = GetTradeSkillItemLink(i)
+         if link  then
+            itemID = tonumber(link:match("item:(%d+)"))
+         end
+         if skillType ~= "header" then
+            craftInfo = (link and itemID) and itemID or ""
+            --print(format("skillName: %s, id : %s", skillName or "nil", craftInfo or "nil"))
+            local prof = GetCharacterProfession(AltinatorAddon.CurrentCharacter, profId)
+            if prof then
+               prof.Items = prof.Items or {}
+               prof.Items[itemID] = {
+                  Name = skillName,
+                  SkillType = skillType,
+                  Cooldown = cooldown,
+                  CooldownEndTime = (cooldown and cooldown>0) and (time() + cooldown) or 0
+               }
+            end
+         end
+      end
+   end
+end
+
+function AltinatorAddon:TRADE_SKILL_SHOW()
+   AltinatorAddon:ScheduleTimer(ScanTradeSkills, 0.5)	
+end
+
+function AltinatorAddon:CRAFT_UPDATE()
+   AltinatorAddon:ScheduleTimer(ScanEnchantingRecipes, 0.5)	
 end
 
 local function HasAttachments()
@@ -424,18 +733,6 @@ local function AutoReturnMail(mailData)
          Returned = true
       })
    end
-end
-
-local function GetRealmCharactersSorted()
-   local characterNames = {}
-   local realm = GetNormalizedRealmName()
-   for key, char in pairs(AltinatorDB.global.characters) do
-      if char.Realm == realm then
-         table.insert(characterNames, key)
-      end
-   end
-   table.sort(characterNames)
-   return characterNames
 end
 
 local function MoneyToGoldString(money)

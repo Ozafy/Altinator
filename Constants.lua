@@ -24,6 +24,18 @@ C["ProfessionIcons"]= {
     [356] = "trade_fishing",
     [393] = "inv_misc_pelt_wolf_01"
 }
+C["RecipeClassId"] = 9
+C["ProfessionSubclassIdToProfessionId"]= {
+    [7] = 129,
+    [4] = 164,
+    [1] = 165,
+    [6] = 171,
+    [5] = 185,
+    [2] = 197,
+    [3] = 202,
+    [8] = 333,
+    [9] = 356
+}
 C["SecondairyProfession"] = { [129]=true, [185]=true, [356]=true }
 C["SecondairyProfessionOrder"] = { [129]=1, [185]=2, [356]=3 }
 C["Genders"] = {"unknown", "male", "female"}
