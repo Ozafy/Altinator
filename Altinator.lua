@@ -2,7 +2,6 @@ local AddonName, Addon = ...
 
 local _WIDTH = 1024
 local _HEIGHT = 576
-local _ZINDEX = 9000
 
 local L = LibStub("AceLocale-3.0"):GetLocale("Altinator")
 local C = Addon.C
@@ -1451,7 +1450,7 @@ function AltinatorAddon:CreateMainFrame()
    AltinatorFrame = CreateFrame("Frame", "AltinatorFrame", UIParent, "UIPanelDialogTemplate")
    AltinatorTooltip = CreateFrame("GameTooltip", "AltinatorTooltipFrame", AltinatorFrame, "GameTooltipTemplate")
    AltinatorFrame:SetSize(_WIDTH, _HEIGHT)
-   AltinatorFrame:SetFrameLevel(_ZINDEX)
+   AltinatorFrame:SetFrameStrata("DIALOG")
    AltinatorFrame:SetPoint("CENTER")
    AltinatorFrame.Title:SetFontObject("GameFontHighlight")
    AltinatorFrame.Title:SetText("Altinator")
