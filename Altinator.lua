@@ -370,7 +370,7 @@ local function CreateCharacterKnownByTooltipLines(chars)
    local knownBy = {
       "Already known by:",
    }
-   if #chars > 0 then
+   if chars and #chars > 0 then
       for i, char in ipairs(chars) do
          local cr, cg, cb, web = GetClassColor(char.Class.File)
          table.insert(knownBy, "\124c" .. web .. char.Name .. "\124r")
@@ -384,7 +384,7 @@ local function CreateCharacterLearnTooltipLines(charsCouldLearn, profId, require
    local learnedBy = {
       "Could be learned by:"
    }
-   if #charsCouldLearn > 0 then
+   if charsCouldLearn and #charsCouldLearn > 0 then
       for i, char in ipairs(charsCouldLearn) do
          local cr, cg, cb, web = GetClassColor(char.Class.File)
          local prof = GetCharacterProfession(char, profId)
