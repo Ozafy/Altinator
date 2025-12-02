@@ -546,6 +546,7 @@ function AltinatorAddon:OnInitialize()
    self:RegisterEvent("PLAYER_UPDATE_RESTING")
    self:RegisterEvent("PLAYER_GUILD_UPDATE")
    self:RegisterEvent("TRADE_SKILL_SHOW")
+   self:RegisterEvent("TRADE_SKILL_UPDATE")
    self:RegisterEvent("CRAFT_UPDATE")
    LoadOptionsViewFrame()
    RequestTimePlayed()
@@ -553,6 +554,9 @@ function AltinatorAddon:OnInitialize()
    GameTooltip:HookScript("OnTooltipSetItem", GameTooltip_OnTooltipSetItem)
    GameTooltip:HookScript("OnTooltipCleared", GameTooltip_OnTooltipCleared)
    hooksecurefunc(GameTooltip, "SetCraftItem", GameTooltip_SetCraftItem)
+   hooksecurefunc("DoTradeSkill", function()
+			AltinatorCache.updateCooldowns = true
+	end)
 end
 
 function AltinatorAddon:OnDisable()
@@ -566,6 +570,7 @@ function AltinatorAddon:OnDisable()
    self:UnregisterEvent("PLAYER_UPDATE_RESTING")
    self:UnregisterEvent("PLAYER_GUILD_UPDATE")
    self:UnregisterEvent("TRADE_SKILL_SHOW")
+   self:UnregisterEvent("TRADE_SKILL_UPDATE")
    self:UnregisterEvent("CRAFT_UPDATE")
 end
 
@@ -661,23 +666,20 @@ local function ScanTradeSkills()
       for i = 1, numTradeSkills do
          local link
          local itemID
-         local craftInfo
          skillName, skillType, _, _, altVerb = GetTradeSkillInfo(i)
          local cooldown = GetTradeSkillCooldown(i)
          link = GetTradeSkillItemLink(i)
          if link  then
             itemID = tonumber(link:match("item:(%d+)"))
          end
-         if skillType ~= "header" then
-            craftInfo = (link and itemID) and itemID or ""
-            --print(format("skillName: %s, id : %s", skillName or "nil", craftInfo or "nil"))
+         if itemID and skillType ~= "header" then
             local prof = GetCharacterProfession(AltinatorAddon.CurrentCharacter, profId)
             if prof then
                prof.Items = prof.Items or {}
                prof.Items[itemID] = {
                   Name = skillName,
                   SkillType = skillType,
-                  Cooldown = cooldown,
+                  Cooldown = cooldown or 0,
                   CooldownEndTime = (cooldown and cooldown>0) and (time() + cooldown) or 0
                }
             end
@@ -686,8 +688,51 @@ local function ScanTradeSkills()
    end
 end
 
+local function ScanCooldowns()
+	local tradeskillName = GetTradeSkillLine()
+
+   local profNames_rev = tInvert(L["ProfessionIDs"])
+   local profId = 0
+   if profNames_rev[tradeskillName] then
+      profId=profNames_rev[tradeskillName]
+      profession = GetCharacterProfession(AltinatorAddon.CurrentCharacter, profId)
+
+      for i = 1, GetNumTradeSkills() do
+         local skillName, skillType = GetTradeSkillInfo(i)
+         if skillType ~= "header" then
+            local cooldown = GetTradeSkillCooldown(i)
+            if cooldown then
+               link = GetTradeSkillItemLink(i)
+               if link  then
+                  itemID = tonumber(link:match("item:(%d+)"))
+                  if itemID then
+                     if profession then
+                        profession.Items = profession.Items or {}
+                        profession.Items[itemID] = {
+                           Name = skillName,
+                           SkillType = skillType,
+                           Cooldown = cooldown or 0,
+                           CooldownEndTime = (cooldown and cooldown>0) and (time() + cooldown) or 0
+                        }
+                     end
+                  end
+               end
+            end
+         end
+      end
+   end
+end
+
 function AltinatorAddon:TRADE_SKILL_SHOW()
    AltinatorAddon:ScheduleTimer(ScanTradeSkills, 0.5)	
+end
+
+function AltinatorAddon:TRADE_SKILL_UPDATE()
+	if AltinatorCache.updateCooldowns then
+		ScanCooldowns()
+		AltinatorCache.updateCooldowns = false
+	end	
+   
 end
 
 function AltinatorAddon:CRAFT_UPDATE()
@@ -880,6 +925,33 @@ local function CreateInnerBorder(frame, itemQuality)
 	return frame.iborder
 end
 
+local function GetProfessionCooldowns(profession)
+   local cooldowns = {}
+   if profession.Items then
+      for itemId, itemData in pairs(profession.Items) do
+         if itemData.Cooldown and itemData.Cooldown>0 and itemData.CooldownEndTime and itemData.CooldownEndTime>time() then
+            table.insert(cooldowns, {
+               Name = itemData.Name,
+               Cooldown = itemData.Cooldown,
+               CooldownEndTime = itemData.CooldownEndTime
+            })
+         end
+      end
+   end
+   return cooldowns
+end
+
+local function GetProfessionCooldownTooltip(tooltip, profession)
+   local cooldowns = GetProfessionCooldowns(profession)
+   if #cooldowns > 0 then
+         for i, cd in ipairs(cooldowns) do
+         tooltip:AddLine(cd.Name .. ": " .. ShortTimeSpanToString(cd.CooldownEndTime - time()))
+      end
+   else
+      tooltip:AddLine(L["ProfessionNoCooldowns"])
+   end
+end
+
 local function CreateProfessionTexture(contentFrame, charIndex, anchor, baseOffset, iconSize, profIndex, id, profession)
    local profPosition = profIndex
    if C["SecondairyProfession"][id] then
@@ -893,11 +965,31 @@ local function CreateProfessionTexture(contentFrame, charIndex, anchor, baseOffs
    contentFrame.ProfessionIcons[charIndex][profIndex]:SetPoint("LEFT", anchor,"LEFT", baseOffset + (profPosition * 80), 0)
    contentFrame.ProfessionIcons[charIndex][profIndex]:SetTexture("Interface\\ICONS\\" .. profession.File)
 
+   contentFrame.ProfessionIcons[charIndex][profIndex]:SetScript("OnEnter", function(self)
+      AltinatorTooltip:SetOwner(contentFrame, "ANCHOR_CURSOR")
+      AltinatorTooltip:SetText(profession.Name)
+      GetProfessionCooldownTooltip(AltinatorTooltip, profession)
+      AltinatorTooltip:Show()
+   end)
+   contentFrame.ProfessionIcons[charIndex][profIndex]:SetScript("OnLeave", function(self)
+      AltinatorTooltip:Hide()
+   end)
+
    contentFrame.ProfessionTexts = contentFrame.ProfessionTexts or {}
    contentFrame.ProfessionTexts[charIndex] = contentFrame.ProfessionTexts[charIndex] or {}
    contentFrame.ProfessionTexts[charIndex][profIndex] = contentFrame.ProfessionTexts[charIndex][profIndex] or contentFrame:CreateFontString("Profession_Text_" .. id, "ARTWORK", "GameFontHighlight")
    contentFrame.ProfessionTexts[charIndex][profIndex]:SetPoint("LEFT", anchor, "LEFT", baseOffset + 20 + (profPosition * 80), 0)
    contentFrame.ProfessionTexts[charIndex][profIndex]:SetText(profession.Skill.."/"..profession.SkillMax)
+
+   contentFrame.ProfessionTexts[charIndex][profIndex]:SetScript("OnEnter", function(self)
+      AltinatorTooltip:SetOwner(contentFrame, "ANCHOR_CURSOR")
+      AltinatorTooltip:SetText(profession.Name)
+      GetProfessionCooldownTooltip(AltinatorTooltip, profession)
+      AltinatorTooltip:Show()
+   end)
+   contentFrame.ProfessionTexts[charIndex][profIndex]:SetScript("OnLeave", function(self)
+      AltinatorTooltip:Hide()
+   end)
 end
 
 local function GetCharacterIcons(char)

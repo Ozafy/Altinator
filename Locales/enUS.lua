@@ -24,6 +24,7 @@ L["ProfessionIDs"]= {
     [356] = "Fishing",
     [393] = "Skinning"
 }
+L["ProfessionNoCooldowns"] = "Everything is off cooldown"
 L["Totals"] = "Totals"
 L["Mail"] = "Alt Mails"
 L["Auctions"] = "Auctions"
