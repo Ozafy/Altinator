@@ -19,7 +19,7 @@ local AltinatorDB
 local AltinatorFrame
 local AltinatorTooltip
 local AltinatorCache = {}
-local AltinatorSettingsCategory = Settings.RegisterVerticalLayoutCategory("Altinator")
+local AltinatorSettingsCategory, AltinatorSettingsLayout = Settings.RegisterVerticalLayoutCategory("Altinator")
 SLASH_ALTINATOR1, SLASH_ALTINATOR2 = "/alt", "/altinator"
 
 SlashCmdList.ALTINATOR = function(msg, editBox)
@@ -48,6 +48,14 @@ local function OnMinimapSettingChanged(setting, value)
    else
       AltinatorDB.profile.minimap.hide = false
       icon:Show("Altinator")
+   end
+end
+
+local function OnRecipeTooltipSettingChanged(setting, value)
+   if value then
+      AltinatorDB.profile.settings.showRecipeTooltips = true
+   else
+      AltinatorDB.profile.settings.showRecipeTooltips = false
    end
 end
 
@@ -95,6 +103,11 @@ local function DeleteCharacter()
 end
 
 local function LoadOptionsViewFrame()
+    local name = L["OptionsSettingsHeader"];
+    local data = { name = name };
+    local initializer = Settings.CreateSettingInitializer("SettingsListSectionHeaderTemplate", data);
+    AltinatorSettingsLayout:AddInitializer(initializer);
+
 	local minimapSetting = Settings.RegisterAddOnSetting(
       AltinatorSettingsCategory,
       "Altinator_Minimap_Toggle",
@@ -106,6 +119,23 @@ local function LoadOptionsViewFrame()
    )
 	minimapSetting:SetValueChangedCallback(OnMinimapSettingChanged)
 	Settings.CreateCheckbox(AltinatorSettingsCategory, minimapSetting, L["OptionMinimap"])
+
+	local tooltipSetting = Settings.RegisterAddOnSetting(
+      AltinatorSettingsCategory,
+      "Altinator_Tooltip_Toggle",
+      "hideRecipeTooltips",
+      AltinatorDB.profile.settings,
+      Settings.VarType.Boolean,
+      L["OptionTooltip"],
+      Settings.Default.False
+   )
+	tooltipSetting:SetValueChangedCallback(OnRecipeTooltipSettingChanged)
+	Settings.CreateCheckbox(AltinatorSettingsCategory, tooltipSetting, L["OptionTooltipText"])
+
+    local name = L["OptionsDeleteHeader"];
+    local data = { name = name };
+    local initializer = Settings.CreateSettingInitializer("SettingsListSectionHeaderTemplate", data);
+    AltinatorSettingsLayout:AddInitializer(initializer);
 
 	local deleteCharacterSetting = Settings.RegisterProxySetting(
 		AltinatorSettingsCategory,
@@ -375,6 +405,10 @@ local GameTooltipReady = false
 
 local function GameTooltip_Add(tooltip, itemLink)
 
+   if AltinatorDB.profile.settings.hideRecipeTooltips then
+      return
+   end
+
 	local itemString = itemLink:match("item[%-?%d:]+")
 	local _, itemId = strsplit(":", itemString)
 
@@ -488,8 +522,8 @@ function AltinatorAddon:OnInitialize()
 			minimap = {
 				hide = false,
 			},
-         selectedCharacter = {
-            delete = false,
+         settings = {
+            hideRecipeTooltips = false,
          }
 		},
       global = {
@@ -1450,7 +1484,7 @@ function AltinatorAddon:CreateMainFrame()
    AltinatorFrame = CreateFrame("Frame", "AltinatorFrame", UIParent, "UIPanelDialogTemplate")
    AltinatorTooltip = CreateFrame("GameTooltip", "AltinatorTooltipFrame", AltinatorFrame, "GameTooltipTemplate")
    AltinatorFrame:SetSize(_WIDTH, _HEIGHT)
-   AltinatorFrame:SetFrameStrata("DIALOG")
+   AltinatorFrame:SetFrameLevel(100)
    AltinatorFrame:SetPoint("CENTER")
    AltinatorFrame.Title:SetFontObject("GameFontHighlight")
    AltinatorFrame.Title:SetText("Altinator")
