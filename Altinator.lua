@@ -1540,6 +1540,7 @@ local function Tab_OnClick(self)
       scrollChild:Hide()
    end
    AltinatorFrame.ScrollFrame:SetScrollChild(self.content);
+   SetTitle("Altinator - " .. self.Name)
    self.content:LoadContent()
    self.content:Show()
 end
@@ -1554,6 +1555,7 @@ local function CreateTabs(frame,  ...)
       local tab = CreateFrame("Button", frameName.."Tab"..i, frame, "CharacterFrameTabButtonTemplate")
       tab:SetID(i)
       tab:SetText(name)
+      tab.Name = name
       tab:SetScript("OnClick", Tab_OnClick)
 
       tab.content = CreateFrame("Frame", nil, AltinatorFrame.ScrollFrame)
@@ -1572,6 +1574,10 @@ local function CreateTabs(frame,  ...)
    return unpack(contents)
 end
 
+function SetTitle(title)
+   AltinatorFrame.Title:SetText(title)
+end
+
 function AltinatorAddon:CreateMainFrame()
    AltinatorFrame = CreateFrame("Frame", "AltinatorFrame", UIParent, "UIPanelDialogTemplate")
    AltinatorTooltip = CreateFrame("GameTooltip", "AltinatorTooltipFrame", AltinatorFrame, "GameTooltipTemplate")
@@ -1579,7 +1585,7 @@ function AltinatorAddon:CreateMainFrame()
    AltinatorFrame:SetFrameLevel(100)
    AltinatorFrame:SetPoint("CENTER")
    AltinatorFrame.Title:SetFontObject("GameFontHighlight")
-   AltinatorFrame.Title:SetText("Altinator")
+   SetTitle("Altinator")
    AltinatorFrameClose:ClearAllPoints()
    AltinatorFrameClose:SetPoint("TOPRIGHT", AltinatorFrameTitleBG, "TOPRIGHT", 10, 8)
    AltinatorFrameClose:SetScript("OnClick", function()
