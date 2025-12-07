@@ -179,7 +179,7 @@ local function SavePlayerDataLogin()
    data.Rank = data.Rank or {}
    data.Rank.Value = UnitPVPRank("player")
    data.Rank.Name = GetPVPRankInfo(data.Rank.Value)
-   local hk, points = GetPVPSessionStats()
+   local hk, points = GetPVPThisWeekStats()
    data.Honour = data.Honour or {}
    data.Honour.HKs = hk
    data.Honour.Points = points
@@ -1257,7 +1257,7 @@ local function LoadActivityViewFrame(self)
             end
 
             if char.Honour.HKs>=15 then
-               self.HonourTexts[i]:SetText(char.Honour.Points)
+               self.HonourTexts[i]:SetText(char.Honour.Points .. " (\124cnGREEN_FONT_COLOR:" .. char.Honour.HKs .. "\124r " .. L["Kills"] .. ")")
             else
                self.HonourTexts[i]:SetText(L["HonourNotEnoughKills"] .. " (" .. char.Honour.HKs .. "/15)")
             end
