@@ -1587,11 +1587,23 @@ function AltinatorAddon:CreateMainFrame()
    AltinatorFrame:SetPoint("CENTER")
    AltinatorFrame.Title:SetFontObject("GameFontHighlight")
    SetTitle("Altinator")
-   AltinatorFrameClose:ClearAllPoints()
+
+   AltinatorFrame.OptionsButton = AltinatorFrame.OptionsButton or CreateFrame("Button", nil, AltinatorFrame, "GameMenuButtonTemplate");
+   AltinatorFrame.OptionsButton:SetPoint("TOPRIGHT", AltinatorFrameTitleBG, "TOPRIGHT", -18, 5);
+   AltinatorFrame.OptionsButton:SetSize(24, 24);
+   AltinatorFrame.OptionsButton:SetText("|TInterface\\Buttons\\UI-OptionsButton:0|t");
+   AltinatorFrame.OptionsButton:SetNormalFontObject("GameFontNormal");
+   AltinatorFrame.OptionsButton:SetHighlightFontObject("GameFontHighlight");
+   AltinatorFrame.OptionsButton:SetScript("OnClick", function(button)
+      Settings.OpenToCategory(AltinatorSettingsCategory:GetID())
+   end)
+
+   --AltinatorFrameClose:ClearAllPoints()
    AltinatorFrameClose:SetPoint("TOPRIGHT", AltinatorFrameTitleBG, "TOPRIGHT", 10, 8)
    AltinatorFrameClose:SetScript("OnClick", function()
       AltinatorFrame:Hide()
    end)
+
    AltinatorFrame:SetClampedToScreen(true)
    AltinatorFrame:EnableMouse(true)
    AltinatorFrame:SetMovable(true)
