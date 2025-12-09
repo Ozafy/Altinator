@@ -279,6 +279,7 @@ end
 
 local function SavePlayerXP()
    local data = AltinatorAddon.CurrentCharacter
+   data.Level = UnitLevel("player")
    data.XP=data.XP or{}
    data.XP.Current=UnitXP("player")
    data.XP.Needed=UnitXPMax("player")
