@@ -7,5 +7,14 @@
 ## SavedVariables: AltinatorDB
 Libs\Libs.xml
 Locales\Locales.xml
-Constants.lua
+AltinatorConstants.lua
+AltinatorFunctions.lua
+AltinatorLDB.lua
+AltinatorOptions.lua
+AltinatorData.lua
+AltinatorGameTooltip.lua
+AltinatorOverviewFrame.lua
+AltinatorActivityFrame.lua
+AltinatorGearFrame.lua
+AltinatorSearchFrame.lua
 Altinator.lua
