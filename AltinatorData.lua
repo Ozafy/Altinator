@@ -305,7 +305,7 @@ end
 hooksecurefunc("SendMail", function(recipient, subject, body, ...)
    local recipientName, recipientRealm = strsplit("-", recipient)
    recipientRealm = recipientRealm or GetNormalizedRealmName()
-   local data = AltinatorDB.global.characters[recipientName .. "-" .. recipientRealm]
+   local data = AltinatorNS.AltinatorDB.global.characters[recipientName .. "-" .. recipientRealm]
    if data then
       local attachments = HasAttachments()
       local moneySent = GetSendMailMoney()
@@ -332,7 +332,7 @@ hooksecurefunc("ReturnInboxItem", function(index, ...)
 	local _, stationaryIcon, mailSender, mailSubject, moneySent, _, _, numAttachments = GetInboxHeaderInfo(index)
    local recipientName, recipientRealm = strsplit("-", mailSender)
    recipientRealm = recipientRealm or GetNormalizedRealmName()
-   local data = AltinatorDB.global.characters[recipientName .. "-" .. recipientRealm]
+   local data = AltinatorNS.AltinatorDB.global.characters[recipientName .. "-" .. recipientRealm]
    if data then
       data.Mail = data.Mail or {}
       table.insert(data.Mail, {
@@ -349,7 +349,7 @@ hooksecurefunc("ReturnInboxItem", function(index, ...)
    end
 end)
 
-function AltinatorData:GetProfessionCooldowns(profession)
+function AltinatorData:7(profession)
    local cooldowns = {}
    if profession.Items then
       for itemId, itemData in pairs(profession.Items) do
