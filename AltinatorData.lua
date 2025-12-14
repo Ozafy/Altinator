@@ -315,7 +315,7 @@ hooksecurefunc("SendMail", function(recipient, subject, body, ...)
       end
       data.Mail = data.Mail or {}
       table.insert(data.Mail, {
-         Sender = AltinatorAddon.CurrentCharacter.FullName,
+         Sender = AltinatorNS.AltinatorAddon.CurrentCharacter.FullName,
          Subject = subject,
          Body = body or "",
          Time = time(),
@@ -336,7 +336,7 @@ hooksecurefunc("ReturnInboxItem", function(index, ...)
    if data then
       data.Mail = data.Mail or {}
       table.insert(data.Mail, {
-         Sender = AltinatorAddon.CurrentCharacter.FullName,
+         Sender = AltinatorNS.AltinatorAddon.CurrentCharacter.FullName,
          Subject = subject,
          Body = body or "",
          Time = time(),
@@ -349,7 +349,7 @@ hooksecurefunc("ReturnInboxItem", function(index, ...)
    end
 end)
 
-function AltinatorData:7(profession)
+function AltinatorData:GetProfessionCooldowns(profession)
    local cooldowns = {}
    if profession.Items then
       for itemId, itemData in pairs(profession.Items) do
