@@ -58,11 +58,12 @@ local function CreateProfessionTexture(contentFrame, charIndex, anchor, baseOffs
 end
 
 function AltinatorOverviewFrame:Initialize(self)
-    local ICON_SIZE = 15
-    local _HEIGHT = ICON_SIZE + 5
+    local _PADDING = 5
+    local _ICON_SIZE = 15
+    local _HEIGHT = _ICON_SIZE + 5
 
     self.NameHeader = self.NameHeader or self:CreateFontString("HeaderName", "ARTWORK", "GameFontHighlight")
-    self.NameHeader:SetPoint("TOPLEFT", 5, -10)
+    self.NameHeader:SetPoint("TOPLEFT", _PADDING, -10)
     self.NameHeader:SetText(L["Characters"])
 
     self.GuildHeader = self.GuildHeader or self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
@@ -81,39 +82,41 @@ function AltinatorOverviewFrame:Initialize(self)
     self.ProfessionsHeader:SetPoint("LEFT", self.LevelHeader, "LEFT", 80, 0)
     self.ProfessionsHeader:SetText(L["Professions"])
 
+    local scrollFrame = self.ScrollFrame or AltinatorNS:CreateScrollFrame(self)
+
     local totalCharacters = 0
     local totalMoney = 0
     local characters = AltinatorNS:GetRealmCharactersSorted()
-    self.FactionIcons = self.FactionIcons or {}
-    self.RaceIcons = self.RaceIcons or {}
-    self.ClassIcons = self.ClassIcons or {}
-    self.CharNames = self.CharNames or {}
-    self.GuildNames = self.GuildNames or {}
-    self.MoneyTexts = self.MoneyTexts or {}
-    self.LevelTexts = self.LevelTexts or {}
+    scrollFrame.content.FactionIcons = scrollFrame.content.FactionIcons or {}
+    scrollFrame.content.RaceIcons = scrollFrame.content.RaceIcons or {}
+    scrollFrame.content.ClassIcons = scrollFrame.content.ClassIcons or {}
+    scrollFrame.content.CharNames = scrollFrame.content.CharNames or {}
+    scrollFrame.content.GuildNames = scrollFrame.content.GuildNames or {}
+    scrollFrame.content.MoneyTexts = scrollFrame.content.MoneyTexts or {}
+    scrollFrame.content.LevelTexts = scrollFrame.content.LevelTexts or {}
     for i, name in ipairs(characters) do
         local char = AltinatorDB.global.characters[name]
-        AltinatorNS:CreateCharacterName(self, i, char, self.NameHeader, _HEIGHT, ICON_SIZE)
+        AltinatorNS:CreateCharacterName(scrollFrame.content, i, char, scrollFrame.content, _PADDING, _HEIGHT, _ICON_SIZE)
 
-        self.GuildNames[i] = self.GuildNames[i] or self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-        self.GuildNames[i]:SetPoint("LEFT", self.FactionIcons[i], "LEFT", 165, 0)
+        scrollFrame.content.GuildNames[i] = scrollFrame.content.GuildNames[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+        scrollFrame.content.GuildNames[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 165, 0)
         if char.Guild then
-            self.GuildNames[i]:SetText(char.Guild.Name)
+            scrollFrame.content.GuildNames[i]:SetText(char.Guild.Name)
         else
-            self.GuildNames[i]:SetText("")
+            scrollFrame.content.GuildNames[i]:SetText("")
         end
         
 
-        self.MoneyTexts[i] = self.MoneyTexts[i] or self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-        self.MoneyTexts[i]:SetPoint("RIGHT", self.FactionIcons[i], "LEFT", 495, 0)
-        self.MoneyTexts[i]:SetText(AltinatorNS:MoneyToGoldString(char.Money))
+        scrollFrame.content.MoneyTexts[i] = scrollFrame.content.MoneyTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+        scrollFrame.content.MoneyTexts[i]:SetPoint("RIGHT", scrollFrame.content.FactionIcons[i], "LEFT", 495, 0)
+        scrollFrame.content.MoneyTexts[i]:SetText(AltinatorNS:MoneyToGoldString(char.Money))
         totalMoney = totalMoney + char.Money
 
-        self.LevelTexts[i] = self.LevelTexts[i] or self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-        self.LevelTexts[i]:SetPoint("LEFT", self.FactionIcons[i], "LEFT", 505, 0)
+        scrollFrame.content.LevelTexts[i] = scrollFrame.content.LevelTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+        scrollFrame.content.LevelTexts[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 505, 0)
         local level = char.Level
         local r, g, b, hex = C_Item.GetItemQualityColor(math.floor(level/10))
-        self.LevelTexts[i]:SetTextColor(r, g, b)
+        scrollFrame.content.LevelTexts[i]:SetTextColor(r, g, b)
         if level~=60 then
             --local RestPercent = (char.XP.Rested/char.XP.Needed * 100)
             local tmpRested = char.XP.Rested or 0
@@ -130,27 +133,27 @@ function AltinatorOverviewFrame:Initialize(self)
             level = (("%.1f (\124cnHIGHLIGHT_LIGHT_BLUE:%d%%\124r)"):format(level + (char.XP.Current/char.XP.Needed), RestPercent))
         end
 
-        self.LevelTexts[i]:SetText(level)
+        scrollFrame.content.LevelTexts[i]:SetText(level)
 
         local profIndex = 0;
         for id, profession in pairs(char.Professions) do
-            CreateProfessionTexture(self, i, self.FactionIcons[i], 585, ICON_SIZE, profIndex, id, profession)
+            CreateProfessionTexture(scrollFrame.content, i, scrollFrame.content.FactionIcons[i], 585, _ICON_SIZE, profIndex, id, profession)
             profIndex = profIndex+1
         end
         for id, profession in pairs(char.ProfessionsSecondairy) do
-            CreateProfessionTexture(self, i, self.FactionIcons[i], 585, ICON_SIZE, profIndex, id, profession)
+            CreateProfessionTexture(scrollFrame.content, i, scrollFrame.content.FactionIcons[i], 585, _ICON_SIZE, profIndex, id, profession)
             profIndex = profIndex+1
         end
         totalCharacters = totalCharacters + 1
     end
 
-    self.TotalName = self.TotalName or self:CreateFontString("TotalsName", "ARTWORK", "GameFontHighlight")
-    self.TotalName:SetPoint("TOPLEFT", self.NameHeader, "BOTTOMLEFT", 0, _HEIGHT * -1 * (totalCharacters+2))
-    self.TotalName:SetText(L["Totals"])
+    scrollFrame.content.TotalName = scrollFrame.content.TotalName or scrollFrame.content:CreateFontString("TotalsName", "ARTWORK", "GameFontHighlight")
+    scrollFrame.content.TotalName:SetPoint("TOPLEFT", self.NameHeader, "BOTTOMLEFT", 0, _HEIGHT * -1 * (totalCharacters+2))
+    scrollFrame.content.TotalName:SetText(L["Totals"])
 
-    self.TotalMoneyString = self.TotalMoneyString or self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-    self.TotalMoneyString:SetPoint("RIGHT", self.TotalName, "LEFT", 495, 0)
-    self.TotalMoneyString:SetText(AltinatorNS:MoneyToGoldString(totalMoney))
+    scrollFrame.content.TotalMoneyString = scrollFrame.content.TotalMoneyString or scrollFrame.content:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+    scrollFrame.content.TotalMoneyString:SetPoint("RIGHT", scrollFrame.content.TotalName, "LEFT", 495, 0)
+    scrollFrame.content.TotalMoneyString:SetText(AltinatorNS:MoneyToGoldString(totalMoney))
 
-    self:SetSize(C["Width"] - 50, _HEIGHT * (totalCharacters + 3))
+    scrollFrame.content:SetSize(C["Width"], _HEIGHT * (totalCharacters + 2))
 end

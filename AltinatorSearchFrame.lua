@@ -3,46 +3,41 @@ local AddonName, AltinatorNS = ...
 local C = AltinatorNS.C
 local L = LibStub("AceLocale-3.0"):GetLocale(C["Name"])
 
+local ICON_SIZE = 32
+
 local AltinatorSearchFrame = {}
 AltinatorNS.AltinatorSearchFrame = AltinatorSearchFrame
+
+local function Compare(item1, iterm2)
+    if item1["itemName"] == iterm2["itemName"] then
+        return item1["source"]["character"] < iterm2["source"]["character"]
+    end
+    return item1["itemName"] < iterm2["itemName"]
+end
+
 
 local function SearchResult(result)
     local frame = _G["searchResult"]
     frame.Frames = frame.Frames or {}
     local totalResults = 0
-    local ICON_SIZE = 32
+
     local _HEIGHT = 40
+
     for i, f in pairs(frame.Frames) do
         f:Hide()
     end
+
     if #result>0 then
         if frame.NoResultsFrame then
             frame.NoResultsFrame:Hide()
         end
-
-        frame.ItemHeader = frame.ItemHeader or frame:CreateFontString("HeaderName", "ARTWORK", "GameFontHighlight")
-        frame.ItemHeader:SetPoint("TOPLEFT", 5, 0)
-        frame.ItemHeader:SetText(L["SearchItemName"])
-
-        frame.CharacterHeader = frame.CharacterHeader or frame:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-        frame.CharacterHeader:SetPoint("LEFT", frame.ItemHeader, "LEFT", ICON_SIZE + 300, 0)
-        frame.CharacterHeader:SetText(L["SearchItemCharacter"])
-
-        frame.LocationHeader = frame.LocationHeader or frame:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-        frame.LocationHeader:SetPoint("LEFT", frame.ItemHeader, "LEFT", ICON_SIZE + 450, 0)
-        frame.LocationHeader:SetText(L["SearchItemLocation"])
-
-        frame.TotalInStackHeader = frame.TotalInStackHeader or frame:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-        frame.TotalInStackHeader:SetPoint("LEFT", frame.ItemHeader, "LEFT", ICON_SIZE + 550, 0)
-        frame.TotalInStackHeader:SetText(L["SearchItemTotalInStack"])
-
-        frame.TotalOwnedHeader = frame.TotalOwnedHeader or frame:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-        frame.TotalOwnedHeader:SetPoint("LEFT", frame.ItemHeader, "LEFT", ICON_SIZE + 650, 0)
-        frame.TotalOwnedHeader:SetText(L["SearchItemTotalOwned"])
     else
         frame.NoResultsFrame = frame.NoResultsFrame or frame:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
         frame.NoResultsFrame:SetPoint("CENTER", 0, 0)
         frame.NoResultsFrame:SetText(L["SearchNoResults"])
+        frame.NoResultsFrame:Show()
+        frame:SetSize(C["Width"], _HEIGHT )
+        return
     end
     local itemTotals = {}
     for i, item in pairs(result) do
@@ -52,7 +47,7 @@ local function SearchResult(result)
         item["itemName"] = itemName
         item["itemTexture"] = itemTexture
     end
-    table.sort(result, function(lhs, rhs) return lhs["itemName"] < rhs["itemName"] end)
+    table.sort(result, Compare)
     for i, item in pairs(result) do
         local char = AltinatorDB.global.characters[item["source"]["character"]]
         if char then
@@ -61,7 +56,7 @@ local function SearchResult(result)
             frame.Frames[i].Frames = frame.Frames[i].Frames or {}
             frame.Frames[i]:Show()
             frame.Frames[i]:SetSize(ICON_SIZE, ICON_SIZE)
-            frame.Frames[i]:SetPoint("TOPLEFT", 5, (_HEIGHT * -1 * i))
+            frame.Frames[i]:SetPoint("TOPLEFT", 5, (_HEIGHT * -1 * (i-1)))
             AltinatorNS:CreateInnerBorder(frame.Frames[i], item["quality"])
             frame.Frames[i].Frames["texture"] = frame.Frames[i].Frames["texture"] or frame.Frames[i]:CreateTexture(nil, "BACKGROUND")
             frame.Frames[i].Frames["texture"]:SetSize(ICON_SIZE, ICON_SIZE)
@@ -108,7 +103,7 @@ local function SearchResult(result)
             totalResults = totalResults + 1
         end
     end
-    frame:SetSize(C["Width"]-50, _HEIGHT * (totalResults + 2))
+    frame:SetSize(C["Width"], _HEIGHT * (totalResults))
 end
 
 local function SearchItems(searchTerm)
@@ -131,8 +126,8 @@ function AltinatorSearchFrame:Initialize(self)
         self.SearchBox:SetMultiLine(false);
         self.SearchBox:SetScript("OnKeyUp", function(self, key)
             if key == "ENTER" then
-            SearchItems(self:GetText())
-            self:ClearFocus()
+                SearchItems(self:GetText())
+                self:ClearFocus()
             end
         end)
 
@@ -147,8 +142,27 @@ function AltinatorSearchFrame:Initialize(self)
             self.SearchBox:ClearFocus()
         end)
 
-        self.SearchResult = self.SearchResult or CreateFrame("Frame", "searchResult", self)
-        self.SearchResult:SetPoint("TOPLEFT", 0, -2 * _HEIGHT)
+        self.ItemHeader = self.ItemHeader or self:CreateFontString("HeaderName", "ARTWORK", "GameFontHighlight")
+        self.ItemHeader:SetPoint("TOPLEFT", 5, -2 * _HEIGHT)
+        self.ItemHeader:SetText(L["SearchItemName"])
+
+        self.CharacterHeader = self.CharacterHeader or self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+        self.CharacterHeader:SetPoint("LEFT", self.ItemHeader, "LEFT", ICON_SIZE + 300, 0)
+        self.CharacterHeader:SetText(L["SearchItemCharacter"])
+        
+        self.LocationHeader = self.LocationHeader or self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+        self.LocationHeader:SetPoint("LEFT", self.ItemHeader, "LEFT", ICON_SIZE + 450, 0)
+        self.LocationHeader:SetText(L["SearchItemLocation"])
+
+        self.TotalInStackHeader = self.TotalInStackHeader or self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+        self.TotalInStackHeader:SetPoint("LEFT", self.ItemHeader, "LEFT", ICON_SIZE + 550, 0)
+        self.TotalInStackHeader:SetText(L["SearchItemTotalInStack"])
+
+        self.TotalOwnedHeader = self.TotalOwnedHeader or self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+        self.TotalOwnedHeader:SetPoint("LEFT", self.ItemHeader, "LEFT", ICON_SIZE + 650, 0)
+        self.TotalOwnedHeader:SetText(L["SearchItemTotalOwned"])
+
+        local scrollFrame = self.ScrollFrame or AltinatorNS:CreateScrollFrame(self, nil, _HEIGHT * -3, nil, nil, "searchResult")
 
         self:SetSize(C["Width"] - 42, C["Height"] - 50)
     else
@@ -156,6 +170,6 @@ function AltinatorSearchFrame:Initialize(self)
         self.NoDataFrame:SetPoint("CENTER", 0, 0)
         self.NoDataFrame:SetText(L["Syndicator_Not_Ready"])
 
-        self:SetSize(C["Width"]-42, C["Height"] -50)
+        self:SetSize(C["Width"] - 42, C["Height"] - 50)
     end
 end

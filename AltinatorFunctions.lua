@@ -153,10 +153,10 @@ function AltinatorNS:CreateInnerBorder(frame, itemQuality)
 	return frame.iborder
 end
 
-function AltinatorNS:CreateCharacterName(contentFrame, charIndex, char, anchor, baseOffset, iconSize)
+function AltinatorNS:CreateCharacterName(contentFrame, charIndex, char, anchor, OffsetX, baseOffsetY, iconSize)
    contentFrame.FactionIcons[charIndex] = contentFrame.FactionIcons[charIndex] or contentFrame:CreateTexture("Faction_Icon_" .. charIndex, "BACKGROUND")
    contentFrame.FactionIcons[charIndex]:SetSize(iconSize, iconSize)
-   contentFrame.FactionIcons[charIndex]:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, baseOffset * -1 * charIndex)
+   contentFrame.FactionIcons[charIndex]:SetPoint("TOPLEFT", anchor, "TOPLEFT", OffsetX, baseOffsetY * -1 * (charIndex-1))
    local factionIcon, raceIcon, classIcon, showRank = AltinatorNS:GetCharacterIcons(char)
    if showRank then
       contentFrame.FactionIcons[charIndex]:SetScript("OnEnter", function(self)
@@ -187,4 +187,37 @@ function AltinatorNS:CreateCharacterName(contentFrame, charIndex, char, anchor, 
    contentFrame.CharNames[charIndex]:SetText(char.Name)
    local cr, cg, cb, web = GetClassColor(char.Class.File)
    contentFrame.CharNames[charIndex]:SetTextColor(cr, cg, cb)
+end
+
+function AltinatorNS:CreateScrollFrame(parent, topX, topY, bottomX, bottomY, contentFrameName)
+
+   if not topX then topX = 0 end
+   if not topY then topY = -32 end
+   if not bottomX then bottomX = -22 end
+   if not bottomY then bottomY = 0 end
+
+   parent.ScrollFrame = parent.ScrollFrame or CreateFrame("ScrollFrame", nil, parent, "UIPanelScrollFrameTemplate")
+   parent.ScrollFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", topX, topY)
+   parent.ScrollFrame:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", bottomX, bottomY)
+   parent.ScrollFrame:SetScript("OnMouseWheel", function(self, delta)
+      AltinatorNS:ScrollFrame_OnMouseWheel(self, delta)
+   end)
+   parent.ScrollFrame:EnableMouse(true)
+
+   parent.ScrollFrame.content = parent.ScrollFrame.content or CreateFrame("Frame", contentFrameName, parent.ScrollFrame)
+   parent.ScrollFrame.content:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
+   parent.ScrollFrame.content:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
+
+   parent.ScrollFrame:SetScrollChild(parent.ScrollFrame.content);
+   return parent.ScrollFrame
+end
+
+function AltinatorNS:ScrollFrame_OnMouseWheel(self, delta)
+   local newValue = self:GetVerticalScroll() - (delta * 20)
+   if (newValue < 0) then
+      newValue = 0
+   elseif (newValue > self:GetVerticalScrollRange()) then
+      newValue = self:GetVerticalScrollRange()
+   end
+   self:SetVerticalScroll(newValue)
 end

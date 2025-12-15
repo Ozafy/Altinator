@@ -155,24 +155,18 @@ function AltinatorAddon:ToggleFrame()
    f:SetShown(not f:IsShown())
 end
 
-local function ScrollFrame_OnMouseWheel(self, delta)
-   local newValue = self:GetVerticalScroll() - (delta * 20)
-   if (newValue < 0) then
-      newValue = 0
-   elseif (newValue > self:GetVerticalScrollRange()) then
-      newValue = self:GetVerticalScrollRange()
-   end
-   self:SetVerticalScroll(newValue)
-end
-
 local function Tab_OnClick(self)
    PanelTemplates_SetTab(self:GetParent(), self:GetID())
 
-   local scrollChild = AltinatorFrame.ScrollFrame:GetScrollChild()
+   --[[local scrollChild = AltinatorFrame.ScrollFrame:GetScrollChild()
    if(scrollChild) then
       scrollChild:Hide()
    end
-   AltinatorFrame.ScrollFrame:SetScrollChild(self.content);
+   AltinatorFrame.ScrollFrame:SetScrollChild(self.content);]]--
+   for i = 1, self:GetParent().numTabs do
+      local tab = _G[self:GetParent():GetName().."Tab"..i]
+      tab.content:Hide()
+   end
    SetTitle("Altinator - " .. self.Name)
    self.content:LoadContent(self.content)
    self.content:Show()
@@ -191,14 +185,20 @@ local function CreateTabs(frame,  ...)
       tab.Name = name
       tab:SetScript("OnClick", Tab_OnClick)
 
-      tab.content = CreateFrame("Frame", nil, AltinatorFrame.ScrollFrame)
+      --[[tab.content = CreateFrame("Frame", nil, AltinatorFrame.ScrollFrame)
       tab.content:SetSize(C["Width"]-42, C["Height"])
+      tab.content:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -28)
+      tab.content:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -32, 6)]]--
+      tab.content = CreateFrame("Frame", nil, frame)      
+      tab.content:SetSize(C["Width"], C["Height"])
+      tab.content:SetPoint("TOPLEFT", frame, "TOPLEFT", 8, -28)
+      tab.content:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -10, 6)
       tab.content:Hide()
       
       table.insert(contents, tab.content)
 
       if(i==1) then
-         tab:SetPoint("TOPLEFT", AltinatorFrame, "BOTTOMLEFT", 0, 0)
+         tab:SetPoint("TOPLEFT", AltinatorFrame, "BOTTOMLEFT", 0, 2)
       else
          tab:SetPoint("TOPLEFT", _G[frameName.."Tab"..(i-1)], "TOPRIGHT", -14, 0)
       end
@@ -252,11 +252,11 @@ function AltinatorAddon:CreateMainFrame()
    end)
    
 
-   AltinatorFrame.ScrollFrame = CreateFrame("ScrollFrame", "AltinatorScrollFrame", AltinatorFrame, "UIPanelScrollFrameTemplate")
+   --[[AltinatorFrame.ScrollFrame = CreateFrame("ScrollFrame", "AltinatorScrollFrame", AltinatorFrame, "UIPanelScrollFrameTemplate")
    AltinatorFrame.ScrollFrame:SetPoint("TOPLEFT", AltinatorFrame, "TOPLEFT", 10, -28)
    AltinatorFrame.ScrollFrame:SetPoint("BOTTOMRIGHT", AltinatorFrame, "BOTTOMRIGHT", -32, 6)
    AltinatorFrame.ScrollFrame:SetScript("OnMouseWheel", ScrollFrame_OnMouseWheel)
-   AltinatorFrame.ScrollFrame:EnableMouse(true)
+   AltinatorFrame.ScrollFrame:EnableMouse(true)]]--
 
    local overView, activityView, gearView, searchView = CreateTabs(AltinatorFrame, L["Overview"], L["Activity"], L["Gear"], L["Search"])
    overView.LoadContent = AltinatorNS.AltinatorOverviewFrame.Initialize
