@@ -198,7 +198,7 @@ local function CreateTabs(frame,  ...)
       table.insert(contents, tab.content)
 
       if(i==1) then
-         tab:SetPoint("TOPLEFT", AltinatorFrame, "BOTTOMLEFT", 5, 7)
+         tab:SetPoint("TOPLEFT", AltinatorFrame, "BOTTOMLEFT", 0, 0)
       else
          tab:SetPoint("TOPLEFT", _G[frameName.."Tab"..(i-1)], "TOPRIGHT", -14, 0)
       end
@@ -212,28 +212,26 @@ function SetTitle(title)
 end
 
 function AltinatorAddon:CreateMainFrame()
-   AltinatorFrame = CreateFrame("Frame", "AltinatorFrame", UIParent, "UIPanelDialogTemplate")
+   AltinatorFrame = CreateFrame("Frame", "AltinatorFrame", UIParent, "BasicFrameTemplateWithInset")
    AltinatorNS.AltinatorTooltip = CreateFrame("GameTooltip", "AltinatorNS.AltinatorTooltipFrame", AltinatorFrame, "GameTooltipTemplate")
    AltinatorFrame:SetSize(C["Width"], C["Height"])
+   AltinatorFrame:Raise()
    AltinatorFrame:SetFrameLevel(100)
    AltinatorFrame:SetPoint("CENTER")
-   AltinatorFrame.Title:SetFontObject("GameFontHighlight")
+
+   AltinatorFrame.TitleBg:SetHeight(30)
+   AltinatorFrame.Title = AltinatorFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+   AltinatorFrame.Title:SetPoint("CENTER", AltinatorFrame.TitleBg, "CENTER", 0, 6)
    SetTitle(C["Name"])
 
    AltinatorFrame.OptionsButton = AltinatorFrame.OptionsButton or CreateFrame("Button", nil, AltinatorFrame, "GameMenuButtonTemplate");
-   AltinatorFrame.OptionsButton:SetPoint("TOPRIGHT", AltinatorFrameTitleBG, "TOPRIGHT", -18, 5);
+   AltinatorFrame.OptionsButton:SetPoint("TOPRIGHT", AltinatorFrame, "TOPRIGHT", -23, 2);
    AltinatorFrame.OptionsButton:SetSize(24, 24);
    AltinatorFrame.OptionsButton:SetText("|TInterface\\Buttons\\UI-OptionsButton:0|t");
    AltinatorFrame.OptionsButton:SetNormalFontObject("GameFontNormal");
    AltinatorFrame.OptionsButton:SetHighlightFontObject("GameFontHighlight");
    AltinatorFrame.OptionsButton:SetScript("OnClick", function(button)
       Settings.OpenToCategory(AltinatorNS.AltinatorOptions.Category:GetID())
-   end)
-
-   --AltinatorFrameClose:ClearAllPoints()
-   AltinatorFrameClose:SetPoint("TOPRIGHT", AltinatorFrameTitleBG, "TOPRIGHT", 10, 8)
-   AltinatorFrameClose:SetScript("OnClick", function()
-      AltinatorFrame:Hide()
    end)
 
    AltinatorFrame:SetClampedToScreen(true)
@@ -258,8 +256,8 @@ function AltinatorAddon:CreateMainFrame()
    tinsert(UISpecialFrames, "AltinatorFrame");
 
    AltinatorFrame.ScrollFrame = CreateFrame("ScrollFrame", "AltinatorScrollFrame", AltinatorFrame, "UIPanelScrollFrameTemplate")
-   AltinatorFrame.ScrollFrame:SetPoint("TOPLEFT", AltinatorFrameDialogBG, "TOPLEFT", 4, -8)
-   AltinatorFrame.ScrollFrame:SetPoint("BOTTOMRIGHT", AltinatorFrameDialogBG, "BOTTOMRIGHT", -24, 2)
+   AltinatorFrame.ScrollFrame:SetPoint("TOPLEFT", AltinatorFrame, "TOPLEFT", 10, -28)
+   AltinatorFrame.ScrollFrame:SetPoint("BOTTOMRIGHT", AltinatorFrame, "BOTTOMRIGHT", -32, 6)
    AltinatorFrame.ScrollFrame:SetScript("OnMouseWheel", ScrollFrame_OnMouseWheel)
    AltinatorFrame.ScrollFrame:EnableMouse(true)
 
