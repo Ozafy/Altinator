@@ -15,23 +15,61 @@ local function SearchResult(result)
     for i, f in pairs(frame.Frames) do
         f:Hide()
     end
+    if #result>0 then
+        if frame.NoResultsFrame then
+            frame.NoResultsFrame:Hide()
+        end
+
+        frame.ItemHeader = frame.ItemHeader or frame:CreateFontString("HeaderName", "ARTWORK", "GameFontHighlight")
+        frame.ItemHeader:SetPoint("TOPLEFT", 5, 0)
+        frame.ItemHeader:SetText(L["SearchItemName"])
+
+        frame.CharacterHeader = frame.CharacterHeader or frame:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+        frame.CharacterHeader:SetPoint("LEFT", frame.ItemHeader, "LEFT", ICON_SIZE + 300, 0)
+        frame.CharacterHeader:SetText(L["SearchItemCharacter"])
+
+        frame.LocationHeader = frame.LocationHeader or frame:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+        frame.LocationHeader:SetPoint("LEFT", frame.ItemHeader, "LEFT", ICON_SIZE + 450, 0)
+        frame.LocationHeader:SetText(L["SearchItemLocation"])
+
+        frame.TotalInStackHeader = frame.TotalInStackHeader or frame:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+        frame.TotalInStackHeader:SetPoint("LEFT", frame.ItemHeader, "LEFT", ICON_SIZE + 550, 0)
+        frame.TotalInStackHeader:SetText(L["SearchItemTotalInStack"])
+
+        frame.TotalOwnedHeader = frame.TotalOwnedHeader or frame:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+        frame.TotalOwnedHeader:SetPoint("LEFT", frame.ItemHeader, "LEFT", ICON_SIZE + 650, 0)
+        frame.TotalOwnedHeader:SetText(L["SearchItemTotalOwned"])
+    else
+        frame.NoResultsFrame = frame.NoResultsFrame or frame:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+        frame.NoResultsFrame:SetPoint("CENTER", 0, 0)
+        frame.NoResultsFrame:SetText(L["SearchNoResults"])
+    end
+    local itemTotals = {}
+    for i, item in pairs(result) do
+        itemTotals[item["itemID"]] = itemTotals[item["itemID"]] or 0
+        itemTotals[item["itemID"]] = itemTotals[item["itemID"]] + item["itemCount"]
+        local itemName, _, _, _, _, _, _, _, _, itemTexture = GetItemInfo(item["itemID"])
+        item["itemName"] = itemName
+        item["itemTexture"] = itemTexture
+    end
+    table.sort(result, function(lhs, rhs) return lhs["itemName"] < rhs["itemName"] end)
     for i, item in pairs(result) do
         local char = AltinatorDB.global.characters[item["source"]["character"]]
         if char then
-            local itemName, _, _, _, _, _, _, _, _, itemTexture = GetItemInfo(item["itemID"])
+            --local itemName, _, _, _, _, _, _, _, _, itemTexture = GetItemInfo(item["itemID"])
             frame.Frames[i] = frame.Frames[i] or CreateFrame("Frame", nil, frame)
             frame.Frames[i].Frames = frame.Frames[i].Frames or {}
             frame.Frames[i]:Show()
             frame.Frames[i]:SetSize(ICON_SIZE, ICON_SIZE)
-            frame.Frames[i]:SetPoint("TOPLEFT", 5, (_HEIGHT * -1 * totalResults))
+            frame.Frames[i]:SetPoint("TOPLEFT", 5, (_HEIGHT * -1 * i))
             AltinatorNS:CreateInnerBorder(frame.Frames[i], item["quality"])
             frame.Frames[i].Frames["texture"] = frame.Frames[i].Frames["texture"] or frame.Frames[i]:CreateTexture(nil, "BACKGROUND")
             frame.Frames[i].Frames["texture"]:SetSize(ICON_SIZE, ICON_SIZE)
             frame.Frames[i].Frames["texture"]:SetPoint("CENTER")
-            if itemTexture then
-            frame.Frames[i].Frames["texture"]:SetTexture(itemTexture)
+            if item["itemTexture"] then
+                frame.Frames[i].Frames["texture"]:SetTexture(item["itemTexture"])
             else
-            frame.Frames[i].Frames["texture"]:SetTexture(136235)
+                frame.Frames[i].Frames["texture"]:SetTexture(136235)
             end
 
             frame.Frames[i].Frames["texture"].TooltipItemLink = item["itemLink"]
@@ -46,7 +84,7 @@ local function SearchResult(result)
             frame.Frames[i].Frames["itemNameString"] = frame.Frames[i].Frames["itemNameString"] or frame.Frames[i]:CreateFontString(nil,"ARTWORK","GameFontHighlight")
             frame.Frames[i].Frames["itemNameString"]:SetPoint("LEFT", frame.Frames[i].Frames["texture"], "LEFT", ICON_SIZE + 10, 0)
             local r, g, b, _ = C_Item.GetItemQualityColor(item["quality"])
-            frame.Frames[i].Frames["itemNameString"]:SetText(itemName)
+            frame.Frames[i].Frames["itemNameString"]:SetText(item["itemName"])
             frame.Frames[i].Frames["itemNameString"]:SetTextColor(r, g, b)
 
             frame.Frames[i].Frames["charName"] = frame.Frames[i].Frames["charName"] or frame.Frames[i]:CreateFontString(nil,"ARTWORK","GameFontHighlight")
@@ -63,22 +101,18 @@ local function SearchResult(result)
             frame.Frames[i].Frames["itemCountString"]:SetPoint("LEFT", frame.Frames[i].Frames["texture"], "LEFT", ICON_SIZE + 550, 0)
             frame.Frames[i].Frames["itemCountString"]:SetText(item["itemCount"])
 
+            frame.Frames[i].Frames["itemTotalCountString"] = frame.Frames[i].Frames["itemTotalCountString"] or frame.Frames[i]:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+            frame.Frames[i].Frames["itemTotalCountString"]:SetPoint("LEFT", frame.Frames[i].Frames["texture"], "LEFT", ICON_SIZE + 650, 0)
+            frame.Frames[i].Frames["itemTotalCountString"]:SetText(itemTotals[item["itemID"]])
+
             totalResults = totalResults + 1
         end
     end
-    if totalResults == 0 then
-        frame.NoResultsFrame = frame.NoResultsFrame or frame:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-        frame.NoResultsFrame:SetPoint("CENTER", 0, 0)
-        frame.NoResultsFrame:SetText(L["SearchNoResults"])
-    else
-        if frame.NoResultsFrame then
-            frame.NoResultsFrame:Hide()
-        end
-    end   
     frame:SetSize(C["Width"]-50, _HEIGHT * (totalResults + 2))
 end
 
 local function SearchItems(searchTerm)
+    searchTerm = string.lower(searchTerm)
     Syndicator.Search.RequestSearchEverywhereResults(searchTerm, SearchResult)
 end
 

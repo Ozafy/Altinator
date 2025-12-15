@@ -62,18 +62,31 @@ function AltinatorActivityFrame:Initialize(self)
             self.MailTexts[i] = self.MailTexts[i] or self:CreateFontString(nil,"ARTWORK","GameFontHighlight")
             self.MailTexts[i]:SetPoint("LEFT", self.FactionIcons[i], "LEFT", 165, 0)
             local charMails = 0
-            local charMailsInTransit = 0
+            local charMailsInTransit = {}
             char.Mail = char.Mail or {}
             for i=#char.Mail,1,-1 do
                 if char.Mail[i].ArrivalTime < time() then
                     charMails = charMails + 1
                 else
-                    charMailsInTransit = charMailsInTransit + 1
+                    table.insert(charMailsInTransit, char.Mail[i].ArrivalTime)
                 end
             end
-            totalMail = totalMail + charMails + charMailsInTransit
-            if charMails>0 or charMailsInTransit>0 then
-                self.MailTexts[i]:SetText("\124cnGREEN_FONT_COLOR:" .. charMails .. "\124r (\124cnYELLOW_FONT_COLOR:" .. charMailsInTransit .. "\124r)")
+            totalMail = totalMail + charMails + #charMailsInTransit
+            if charMails>0 or #charMailsInTransit>0 then
+                self.MailTexts[i]:SetText("\124cnGREEN_FONT_COLOR:" .. charMails .. "\124r (\124cnYELLOW_FONT_COLOR:" .. #charMailsInTransit .. "\124r)")
+                if #charMailsInTransit>0 then
+                    self.MailTexts[i]:SetScript("OnEnter", function(self)
+                        AltinatorNS.AltinatorTooltip:SetOwner(self, "ANCHOR_CURSOR")
+                        AltinatorNS.AltinatorTooltip:SetText(L["MailInTransit"])
+                        for _, arrivalTime in ipairs(charMailsInTransit) do
+                            AltinatorNS.AltinatorTooltip:AddLine(L["MailInTransit_ArrivesIn"] .. " " .. AltinatorNS:ShortTimeSpanToString(arrivalTime - time()), 1, 1, 1)
+                        end
+                        AltinatorNS.AltinatorTooltip:Show()
+                    end)
+                    self.MailTexts[i]:SetScript("OnLeave", function(self)
+                        AltinatorNS.AltinatorTooltip:Hide()
+                    end)
+                end
             else
                 self.MailTexts[i]:SetText(charMails)
             end
