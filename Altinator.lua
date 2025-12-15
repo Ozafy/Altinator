@@ -215,9 +215,7 @@ function AltinatorAddon:CreateMainFrame()
    AltinatorFrame = CreateFrame("Frame", "AltinatorFrame", UIParent, "BasicFrameTemplateWithInset")
    AltinatorNS.AltinatorTooltip = CreateFrame("GameTooltip", "AltinatorNS.AltinatorTooltipFrame", AltinatorFrame, "GameTooltipTemplate")
    AltinatorFrame:SetSize(C["Width"], C["Height"])
-   AltinatorFrame:Raise()
-   AltinatorFrame:SetFrameLevel(100)
-   AltinatorFrame:SetPoint("CENTER")
+   AltinatorFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 
    AltinatorFrame.TitleBg:SetHeight(30)
    AltinatorFrame.Title = AltinatorFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -247,13 +245,12 @@ function AltinatorAddon:CreateMainFrame()
 
    AltinatorFrame:SetScript("OnShow", function()
          PlaySound(808)
-         local scrollChild = AltinatorFrame.ScrollFrame:GetScrollChild()
    end)
 
    AltinatorFrame:SetScript("OnHide", function()
          PlaySound(808)
    end)
-   tinsert(UISpecialFrames, "AltinatorFrame");
+   
 
    AltinatorFrame.ScrollFrame = CreateFrame("ScrollFrame", "AltinatorScrollFrame", AltinatorFrame, "UIPanelScrollFrameTemplate")
    AltinatorFrame.ScrollFrame:SetPoint("TOPLEFT", AltinatorFrame, "TOPLEFT", 10, -28)
@@ -268,6 +265,7 @@ function AltinatorAddon:CreateMainFrame()
    searchView.LoadContent = AltinatorNS.AltinatorSearchFrame.Initialize
 
    Tab_OnClick(_G["AltinatorFrameTab1"])
+   tinsert(UISpecialFrames, "AltinatorFrame");
    AltinatorFrame:Hide()
    return AltinatorFrame
 end
