@@ -189,7 +189,7 @@ function AltinatorNS:CreateCharacterName(contentFrame, charIndex, char, anchor, 
    contentFrame.CharNames[charIndex]:SetTextColor(cr, cg, cb)
 end
 
-function AltinatorNS:CreateScrollFrame(parent, topX, topY, bottomX, bottomY, contentFrameName)
+function AltinatorNS:CreateScrollFrame(parent, topX, topY, bottomX, bottomY)
 
    if not topX then topX = 0 end
    if not topY then topY = -32 end
@@ -204,7 +204,7 @@ function AltinatorNS:CreateScrollFrame(parent, topX, topY, bottomX, bottomY, con
    end)
    parent.ScrollFrame:EnableMouse(true)
 
-   parent.ScrollFrame.content = parent.ScrollFrame.content or CreateFrame("Frame", contentFrameName, parent.ScrollFrame)
+   parent.ScrollFrame.content = parent.ScrollFrame.content or CreateFrame("Frame", nil, parent.ScrollFrame)
    parent.ScrollFrame.content:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
    parent.ScrollFrame.content:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
 

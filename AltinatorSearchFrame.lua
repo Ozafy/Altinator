@@ -17,7 +17,7 @@ end
 
 
 local function SearchResult(result)
-    local frame = _G["searchResult"]
+    local frame = AltinatorNS.AltinatorSearchFrame
     frame.Frames = frame.Frames or {}
     local totalResults = 0
 
@@ -162,7 +162,8 @@ function AltinatorSearchFrame:Initialize(self)
         self.TotalOwnedHeader:SetPoint("LEFT", self.ItemHeader, "LEFT", ICON_SIZE + 650, 0)
         self.TotalOwnedHeader:SetText(L["SearchItemTotalOwned"])
 
-        local scrollFrame = self.ScrollFrame or AltinatorNS:CreateScrollFrame(self, nil, _HEIGHT * -3, nil, nil, "searchResult")
+        local scrollFrame = self.ScrollFrame or AltinatorNS:CreateScrollFrame(self, nil, _HEIGHT * -3, nil, nil)
+        AltinatorNS.AltinatorSearchFrame = scrollFrame.content
 
         self:SetSize(C["Width"] - 42, C["Height"] - 50)
     else
