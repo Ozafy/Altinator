@@ -157,8 +157,8 @@ end
 local function Tab_OnClick(self)
    PanelTemplates_SetTab(self:GetParent(), self:GetID())
 
-   for i = 1, self:GetParent().numTabs do
-      local tab = _G[self:GetParent():GetName().."Tab"..i]
+   for i = 1, #AltinatorNS.Tabs do
+      local tab = AltinatorNS.Tabs[i]
       tab.content:Hide()
    end
    SetTitle("Altinator - " .. self.Name)
@@ -167,12 +167,10 @@ local function Tab_OnClick(self)
 end
 
 local function CreateTabs(frame,  ...)
-   local numTabs = 0
    local args = {...}
-   local contents = {}
+   AltinatorNS.Tabs = AltinatorNS.Tabs or {}
    local frameName = frame:GetName()
    for i, name in ipairs(args) do
-      numTabs = i
       local tab = CreateFrame("Button", frameName.."Tab"..i, frame, "CharacterFrameTabButtonTemplate")
       tab:SetID(i)
       tab:SetText(name)
@@ -185,16 +183,16 @@ local function CreateTabs(frame,  ...)
       tab.content:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -10, 6)
       tab.content:Hide()
       
-      table.insert(contents, tab.content)
+      table.insert(AltinatorNS.Tabs, tab)
 
       if(i==1) then
          tab:SetPoint("TOPLEFT", AltinatorFrame, "BOTTOMLEFT", 0, 2)
       else
-         tab:SetPoint("TOPLEFT", _G[frameName.."Tab"..(i-1)], "TOPRIGHT", -14, 0)
+         tab:SetPoint("TOPLEFT", AltinatorNS.Tabs[i-1], "TOPRIGHT", -14, 0)
       end
    end
-   frame.numTabs = numTabs
-   return unpack(contents)
+   frame.numTabs = #AltinatorNS.Tabs
+   return unpack(AltinatorNS.Tabs)
 end
 
 function SetTitle(title)
@@ -225,7 +223,7 @@ function AltinatorAddon:CreateMainFrame()
          PlaySound(808)
    end)
 
-   AltinatorNS.AltinatorTooltip = CreateFrame("GameTooltip", "AltinatorNS.AltinatorTooltipFrame", AltinatorFrame, "GameTooltipTemplate")
+   AltinatorNS.AltinatorTooltip = CreateFrame("GameTooltip", "AltinatorTooltipFrame", AltinatorFrame, "GameTooltipTemplate")
    AltinatorNS.AltinatorTooltip:SetFrameStrata("TOOLTIP")
 
    AltinatorFrame.TitleBg:SetHeight(30)
@@ -244,12 +242,12 @@ function AltinatorAddon:CreateMainFrame()
    end)
 
    local overView, activityView, gearView, searchView = CreateTabs(AltinatorFrame, L["Overview"], L["Activity"], L["Gear"], L["Search"])
-   overView.LoadContent = AltinatorNS.AltinatorOverviewFrame.Initialize
-   activityView.LoadContent = AltinatorNS.AltinatorActivityFrame.Initialize
-   gearView.LoadContent = AltinatorNS.AltinatorGearFrame.Initialize
-   searchView.LoadContent = AltinatorNS.AltinatorSearchFrame.Initialize
+   overView.content.LoadContent = AltinatorNS.AltinatorOverviewFrame.Initialize
+   activityView.content.LoadContent = AltinatorNS.AltinatorActivityFrame.Initialize
+   gearView.content.LoadContent = AltinatorNS.AltinatorGearFrame.Initialize
+   searchView.content.LoadContent = AltinatorNS.AltinatorSearchFrame.Initialize
 
-   Tab_OnClick(_G["AltinatorFrameTab1"])
+   Tab_OnClick(overView)
    tinsert(UISpecialFrames, "AltinatorFrame");
    AltinatorFrame:Hide()
    return AltinatorFrame

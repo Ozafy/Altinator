@@ -17,17 +17,20 @@ local function GetRecipeLevel(link)
 	
 	local tooltipName = AltinatorNS.AltinatorTooltip:GetName()
 	
-	for i = 2, AltinatorNS.AltinatorTooltip:NumLines(), 1 do
-		local tooltipText = _G[tooltipName .. "TextLeft" .. i]:GetText()
-		if tooltipText then
-			local _, _, rLevel = string.find(tooltipText, "%((%d+)%)")
-			if rLevel then
-            AltinatorNS.AltinatorTooltip:Hide()
-            --print("Recipe required level: " .. rLevel)
-				return tonumber(rLevel)
-			end
-		end
-	end
+   for i = 1, select("#", AltinatorNS.AltinatorTooltip:GetRegions()) do
+      local region = select(i, AltinatorNS.AltinatorTooltip:GetRegions())
+      if region and region:GetObjectType() == "FontString" then
+         local tooltipText = region:GetText()
+         if tooltipText then
+            local _, _, rLevel = string.find(tooltipText, "%((%d+)%)")
+            if rLevel then
+               AltinatorNS.AltinatorTooltip:Hide()
+               --print("Recipe required level: " .. rLevel)
+               return tonumber(rLevel)
+            end
+         end
+      end
+   end
 end
 
 local function CreateCharacterKnownByTooltipLines(chars)
