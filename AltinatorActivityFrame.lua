@@ -82,7 +82,7 @@ function AltinatorActivityFrame:Initialize(self)
                         AltinatorNS.AltinatorTooltip:SetOwner(self, "ANCHOR_CURSOR")
                         AltinatorNS.AltinatorTooltip:SetText(L["MailInTransit"])
                         for _, arrivalTime in ipairs(charMailsInTransit) do
-                            AltinatorNS.AltinatorTooltip:AddLine(L["MailInTransit_ArrivesIn"] .. " " .. AltinatorNS:ShortTimeSpanToString(arrivalTime - time()), 1, 1, 1)
+                            AltinatorNS.AltinatorTooltip:AddLine(L["MailInTransit_ArrivesIn"] .. " " .. AltinatorNS:LongTimeSpanToString(arrivalTime - time()), 1, 1, 1)
                         end
                         AltinatorNS.AltinatorTooltip:Show()
                     end)

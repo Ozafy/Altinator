@@ -10,7 +10,7 @@ local function GetProfessionCooldownTooltip(tooltip, profession)
    local cooldowns = AltinatorNS.AltinatorData:GetProfessionCooldowns(profession)
    if #cooldowns > 0 then
          for i, cd in ipairs(cooldowns) do
-         tooltip:AddLine(cd.Name .. ": " .. AltinatorNS:ShortTimeSpanToString(cd.CooldownEndTime - time()))
+         tooltip:AddLine(cd.Name .. ": " .. AltinatorNS:LongTimeSpanToString(cd.CooldownEndTime - time()))
       end
    else
       tooltip:AddLine(L["ProfessionNoCooldowns"])
