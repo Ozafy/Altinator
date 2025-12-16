@@ -26,7 +26,6 @@ SlashCmdList.ALTINATOR = function(msg, editBox)
 end
 
 function AltinatorAddon:OnInitialize()
-	-- Assuming you have a ## SavedVariables: AltinatorDB line in your TOC
 	AltinatorDB = LibStub("AceDB-3.0"):New("AltinatorDB", {
 		profile = {
 			minimap = {
@@ -158,11 +157,6 @@ end
 local function Tab_OnClick(self)
    PanelTemplates_SetTab(self:GetParent(), self:GetID())
 
-   --[[local scrollChild = AltinatorFrame.ScrollFrame:GetScrollChild()
-   if(scrollChild) then
-      scrollChild:Hide()
-   end
-   AltinatorFrame.ScrollFrame:SetScrollChild(self.content);]]--
    for i = 1, self:GetParent().numTabs do
       local tab = _G[self:GetParent():GetName().."Tab"..i]
       tab.content:Hide()
@@ -185,10 +179,6 @@ local function CreateTabs(frame,  ...)
       tab.Name = name
       tab:SetScript("OnClick", Tab_OnClick)
 
-      --[[tab.content = CreateFrame("Frame", nil, AltinatorFrame.ScrollFrame)
-      tab.content:SetSize(C["Width"]-42, C["Height"])
-      tab.content:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -28)
-      tab.content:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -32, 6)]]--
       tab.content = CreateFrame("Frame", nil, frame)      
       tab.content:SetSize(C["Width"], C["Height"])
       tab.content:SetPoint("TOPLEFT", frame, "TOPLEFT", 8, -28)
@@ -213,25 +203,9 @@ end
 
 function AltinatorAddon:CreateMainFrame()
    AltinatorFrame = CreateFrame("Frame", "AltinatorFrame", UIParent, "BasicFrameTemplateWithInset")
-   AltinatorNS.AltinatorTooltip = CreateFrame("GameTooltip", "AltinatorNS.AltinatorTooltipFrame", AltinatorFrame, "GameTooltipTemplate")
    AltinatorFrame:SetSize(C["Width"], C["Height"])
    AltinatorFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-
-   AltinatorFrame.TitleBg:SetHeight(30)
-   AltinatorFrame.Title = AltinatorFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-   AltinatorFrame.Title:SetPoint("CENTER", AltinatorFrame.TitleBg, "CENTER", 0, 6)
-   SetTitle(C["Name"])
-
-   AltinatorFrame.OptionsButton = AltinatorFrame.OptionsButton or CreateFrame("Button", nil, AltinatorFrame, "GameMenuButtonTemplate");
-   AltinatorFrame.OptionsButton:SetPoint("TOPRIGHT", AltinatorFrame, "TOPRIGHT", -23, 2);
-   AltinatorFrame.OptionsButton:SetSize(24, 24);
-   AltinatorFrame.OptionsButton:SetText("|TInterface\\Buttons\\UI-OptionsButton:0|t");
-   AltinatorFrame.OptionsButton:SetNormalFontObject("GameFontNormal");
-   AltinatorFrame.OptionsButton:SetHighlightFontObject("GameFontHighlight");
-   AltinatorFrame.OptionsButton:SetScript("OnClick", function(button)
-      Settings.OpenToCategory(AltinatorNS.AltinatorOptions.Category:GetID())
-   end)
-
+   AltinatorFrame:SetToplevel(true)
    AltinatorFrame:SetClampedToScreen(true)
    AltinatorFrame:EnableMouse(true)
    AltinatorFrame:SetMovable(true)
@@ -250,13 +224,24 @@ function AltinatorAddon:CreateMainFrame()
    AltinatorFrame:SetScript("OnHide", function()
          PlaySound(808)
    end)
-   
 
-   --[[AltinatorFrame.ScrollFrame = CreateFrame("ScrollFrame", "AltinatorScrollFrame", AltinatorFrame, "UIPanelScrollFrameTemplate")
-   AltinatorFrame.ScrollFrame:SetPoint("TOPLEFT", AltinatorFrame, "TOPLEFT", 10, -28)
-   AltinatorFrame.ScrollFrame:SetPoint("BOTTOMRIGHT", AltinatorFrame, "BOTTOMRIGHT", -32, 6)
-   AltinatorFrame.ScrollFrame:SetScript("OnMouseWheel", ScrollFrame_OnMouseWheel)
-   AltinatorFrame.ScrollFrame:EnableMouse(true)]]--
+   AltinatorNS.AltinatorTooltip = CreateFrame("GameTooltip", "AltinatorNS.AltinatorTooltipFrame", AltinatorFrame, "GameTooltipTemplate")
+   AltinatorNS.AltinatorTooltip:SetFrameStrata("TOOLTIP")
+
+   AltinatorFrame.TitleBg:SetHeight(30)
+   AltinatorFrame.Title = AltinatorFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+   AltinatorFrame.Title:SetPoint("CENTER", AltinatorFrame.TitleBg, "CENTER", 0, 6)
+   SetTitle(C["Name"])
+
+   AltinatorFrame.OptionsButton = AltinatorFrame.OptionsButton or CreateFrame("Button", nil, AltinatorFrame, "GameMenuButtonTemplate");
+   AltinatorFrame.OptionsButton:SetPoint("TOPRIGHT", AltinatorFrame, "TOPRIGHT", -23, 2);
+   AltinatorFrame.OptionsButton:SetSize(24, 24);
+   AltinatorFrame.OptionsButton:SetText("|TInterface\\Buttons\\UI-OptionsButton:0|t");
+   AltinatorFrame.OptionsButton:SetNormalFontObject("GameFontNormal");
+   AltinatorFrame.OptionsButton:SetHighlightFontObject("GameFontHighlight");
+   AltinatorFrame.OptionsButton:SetScript("OnClick", function(button)
+      Settings.OpenToCategory(AltinatorNS.AltinatorOptions.Category:GetID())
+   end)
 
    local overView, activityView, gearView, searchView = CreateTabs(AltinatorFrame, L["Overview"], L["Activity"], L["Gear"], L["Search"])
    overView.LoadContent = AltinatorNS.AltinatorOverviewFrame.Initialize
