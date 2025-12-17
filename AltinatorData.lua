@@ -1,7 +1,7 @@
 local AddonName, AltinatorNS = ...
 
 local C = AltinatorNS.C
-local L = LibStub("AceLocale-3.0"):GetLocale(C["Name"])
+local L = LibStub("AceLocale-3.0"):GetLocale(AddonName)
 local AltinatorData = {}
 AltinatorNS.AltinatorData = AltinatorData
 
@@ -105,6 +105,19 @@ function AltinatorData:SavePlayerDataLogin()
       if data.Mail[i].ExpiryTime < time() then
          AutoReturnMail(data.Mail)
          table.remove(data.Mail, i)
+      end
+   end
+
+   data.Attunements = data.Attunements or {}
+   for i, attunement in ipairs(C["Attunements"]) do
+      data.Attunements[i] = data.Attunements[i] or {}
+      if attunement.type==2 and not data.Attunements[i].Completed then
+         for j=1, #attunement.attunementQuests do
+            if C_QuestLog.IsQuestFlaggedCompleted(attunement.attunementQuests[j]) then
+               data.Attunements[i].Completed = true
+               break
+            end
+         end
       end
    end
 end

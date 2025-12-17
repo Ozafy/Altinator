@@ -2,16 +2,16 @@ local AddonName, AltinatorNS = ...
 
 local C = AltinatorNS.C
 
-local AltinatorLDB = LibStub("LibDataBroker-1.1"):NewDataObject(C["Name"], {  
+local AltinatorLDB = LibStub("LibDataBroker-1.1"):NewDataObject(AddonName, {  
 	type = "data source",  
-	text = C["Name"],  
+	text = AddonName,  
 	icon = "Interface\\Icons\\inv_scroll_03",  
 	OnClick = function() AltinatorNS.AltinatorAddon.ToggleFrame() end,  
 }) 
 AltinatorNS.AltinatorLDB = AltinatorLDB
 
 function AltinatorLDB:OnTooltipShow(tooltip)
-   self:AddLine(C["Name"], 255, 255, 255)
+   self:AddLine(AddonName, 255, 255, 255)
    self:AddLine(" ")
    self:AddLine("Gold:")
    local totalmoney = 0

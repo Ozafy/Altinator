@@ -17,4 +17,5 @@ AltinatorOverviewFrame.lua
 AltinatorActivityFrame.lua
 AltinatorGearFrame.lua
 AltinatorSearchFrame.lua
+AltinatorAttunementFrame.lua
 Altinator.lua

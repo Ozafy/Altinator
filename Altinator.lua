@@ -1,7 +1,7 @@
 local AddonName, AltinatorNS = ...
 
 local C = AltinatorNS.C
-local L = LibStub("AceLocale-3.0"):GetLocale(C["Name"])
+local L = LibStub("AceLocale-3.0"):GetLocale(AddonName)
 
 local AltinatorDB = AltinatorNS.AltinatorDB
 local AltinatorLDB = AltinatorNS.AltinatorLDB
@@ -12,7 +12,7 @@ local AltinatorFrame
 
 AltinatorNS.AltinatorCache = {}
 
-local AltinatorAddon = LibStub("AceAddon-3.0"):NewAddon(C["Name"], "AceEvent-3.0", "AceTimer-3.0")
+local AltinatorAddon = LibStub("AceAddon-3.0"):NewAddon(AddonName, "AceEvent-3.0", "AceTimer-3.0")
 AltinatorNS.AltinatorAddon = AltinatorAddon
 
 SLASH_ALTINATOR1, SLASH_ALTINATOR2 = "/alt", "/altinator"
@@ -40,7 +40,7 @@ function AltinatorAddon:OnInitialize()
       }
 	})
    AltinatorNS.AltinatorDB = AltinatorDB
-	icon:Register(C["Name"], AltinatorLDB, AltinatorDB.profile.minimap)
+	icon:Register(AddonName, AltinatorLDB, AltinatorDB.profile.minimap)
    if AltinatorDB.global.dbversion ~= C["MajorDBVersion"] then
       AltinatorDB.global.characters = {}
       AltinatorDB.global.dbversion = C["MajorDBVersion"]
@@ -229,7 +229,7 @@ function AltinatorAddon:CreateMainFrame()
    AltinatorFrame.TitleBg:SetHeight(30)
    AltinatorFrame.Title = AltinatorFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
    AltinatorFrame.Title:SetPoint("CENTER", AltinatorFrame.TitleBg, "CENTER", 0, 6)
-   SetTitle(C["Name"])
+   SetTitle(AddonName)
 
    AltinatorFrame.OptionsButton = AltinatorFrame.OptionsButton or CreateFrame("Button", nil, AltinatorFrame, "GameMenuButtonTemplate");
    AltinatorFrame.OptionsButton:SetPoint("TOPRIGHT", AltinatorFrame, "TOPRIGHT", -23, 2);
@@ -241,11 +241,12 @@ function AltinatorAddon:CreateMainFrame()
       Settings.OpenToCategory(AltinatorNS.AltinatorOptions.Category:GetID())
    end)
 
-   local overView, activityView, gearView, searchView = CreateTabs(AltinatorFrame, L["Overview"], L["Activity"], L["Gear"], L["Search"])
+   local overView, activityView, gearView, searchView, AttunementView = CreateTabs(AltinatorFrame, L["Overview"], L["Activity"], L["Gear"], L["Search"], L["Attunement"])
    overView.content.LoadContent = AltinatorNS.AltinatorOverviewFrame.Initialize
    activityView.content.LoadContent = AltinatorNS.AltinatorActivityFrame.Initialize
    gearView.content.LoadContent = AltinatorNS.AltinatorGearFrame.Initialize
    searchView.content.LoadContent = AltinatorNS.AltinatorSearchFrame.Initialize
+   AttunementView.content.LoadContent = AltinatorNS.AltinatorAttunementFrame.Initialize
 
    Tab_OnClick(overView)
    tinsert(UISpecialFrames, "AltinatorFrame");

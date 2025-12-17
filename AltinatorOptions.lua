@@ -1,10 +1,10 @@
 local AddonName, AltinatorNS = ...
 
 local C = AltinatorNS.C
-local L = LibStub("AceLocale-3.0"):GetLocale(C["Name"])
+local L = LibStub("AceLocale-3.0"):GetLocale(AddonName)
 
 local Altinatoricon = LibStub("LibDBIcon-1.0")
-local AltinatorOptionsCategory, AltinatorOptionsLayout = Settings.RegisterVerticalLayoutCategory(C["Name"])
+local AltinatorOptionsCategory, AltinatorOptionsLayout = Settings.RegisterVerticalLayoutCategory(AddonName)
 
 local AltinatorOptions = {}
 AltinatorNS.AltinatorOptions = AltinatorOptions
@@ -14,10 +14,10 @@ AltinatorNS.AltinatorOptions.Layout = AltinatorOptionsLayout
 local function OnMinimapSettingChanged(setting, value)
    if value then
       AltinatorNS.AltinatorDB.profile.minimap.hide = true
-      Altinatoricon:Hide(C["Name"])
+      Altinatoricon:Hide(AddonName)
    else
       AltinatorNS.AltinatorDB.profile.minimap.hide = false
-      Altinatoricon:Show(C["Name"])
+      Altinatoricon:Show(AddonName)
    end
 end
 

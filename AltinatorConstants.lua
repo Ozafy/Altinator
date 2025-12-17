@@ -1,5 +1,7 @@
 local AddonName, AltinatorNS = ...
 
+local L = LibStub("AceLocale-3.0"):GetLocale(AddonName)
+
 local C = setmetatable({ }, {__index = function(t, k)
 	local v = tostring(k)
 	rawset(t, k, v)
@@ -8,7 +10,7 @@ end})
 
 AltinatorNS.C = C
 
-C["Name"] = "Altinator"
+
 C["MajorDBVersion"] = 1
 C["Width"] = 1024
 C["Height"] = 576
@@ -84,5 +86,74 @@ C["ResetTimes"] = {
 	[3] = {
 		day = 4,
 		hour = 4,
+	},
+}
+
+C["Attunements"] = {
+	[1] = {
+		name = "Scarlet Monestary",
+		type = 1,
+		attunementItem = 7146,
+		iconTexture = "Interface\\Icons\\inv_misc_key_01"
+	},
+	[2] = {
+		name = "Gnomeregan",
+		type = 1,
+		attunementItem = 6893,
+		iconTexture = "Interface\\Icons\\inv_misc_key_06"
+	},
+	[3] = {
+		name = "Zul'Farrak",
+		type = 1,
+		attunementItem = 9240,
+		iconTexture = "Interface\\Icons\\inv_hammer_19"
+	},
+	[4] = {
+		name = "Temple of Atal'Hakkar",
+		type = 1,
+		attunementItem = 10818,
+		iconTexture = "Interface\\Icons\\inv_scroll_02"
+	},
+	[5] = {
+		name = "Maraudon",
+		type = 1,
+		attunementItem = 17191,
+		iconTexture = "Interface\\Icons\\inv_staff_16"
+	},
+	[6] = {
+		name = "Blackrock Depths",
+		type = 1,
+		attunementItem = 11000,
+		iconTexture = "Interface\\Icons\\inv_misc_key_08"
+	},
+	[7] = {
+		name = "Dire Maul",
+		type = 1,
+		attunementItem = 18249,
+		iconTexture = "Interface\\Icons\\inv_misc_key_10"
+	},
+	[8] = {
+		name = "Onyxia's Lair",
+		type = 1,
+		attunementItem = 16309,
+		iconTexture = "Interface\\Icons\\inv_jewelry_talisman_11"
+	},
+	[9] = {
+		name = "Molten Core",
+		type = 2,
+		attunementQuests = {7848},
+		iconTexture = "Interface\\Icons\\inv_hammer_unique_sulfuras"
+	},
+	[10] = {
+		name = "Blackwing Lair",
+		type = 2,
+		attunementQuests = {7761},
+		iconTexture = "Interface\\Icons\\inv_misc_head_dragon_black"
+	},
+	[11] = {
+		name = "Naxxramas",
+		type = 2,
+		attunementQuests = {9121,9122,9123},
+		iconTexture = "Interface\\Icons\\spell_holy_senseundead"
 	},
 }

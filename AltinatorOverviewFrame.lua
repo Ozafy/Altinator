@@ -1,7 +1,7 @@
 local AddonName, AltinatorNS = ...
 
 local C = AltinatorNS.C
-local L = LibStub("AceLocale-3.0"):GetLocale(C["Name"])
+local L = LibStub("AceLocale-3.0"):GetLocale(AddonName)
 
 local AltinatorOverviewFrame = {}
 AltinatorNS.AltinatorOverviewFrame = AltinatorOverviewFrame
