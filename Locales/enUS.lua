@@ -90,10 +90,13 @@ L["AttunementDungeons"] = {
     [5] = "Maraudon",
     [6] = "Blackrock Depths",
     [7] = "Dire Maul",
-    [8] = "Onyxia's Lair",
-    [9] = "Molten Core",
-    [10] = "Blackwing Lair",
-    [11] = "Naxxramas",
+    [8] = "Scholomance",
+    [9] = "Stratholme",
+    [10] = "Upper Blackrock Spire",
+    [11] = "Onyxia's Lair",
+    [12] = "Molten Core",
+    [13] = "Blackwing Lair",
+    [14] = "Naxxramas",
 }
 L["OptionsSettingsHeader"] = "Settings"
 L["OptionMinimap"] = "Hide minimap icon"

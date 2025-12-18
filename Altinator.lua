@@ -58,6 +58,7 @@ function AltinatorAddon:OnInitialize()
    self:RegisterEvent("TRADE_SKILL_SHOW")
    self:RegisterEvent("TRADE_SKILL_UPDATE")
    self:RegisterEvent("CRAFT_UPDATE")
+   self:RegisterEvent("BANKFRAME_OPENED")
    AltinatorNS.AltinatorOptions:Initialize()
    RequestTimePlayed()
    AltinatorNS.AltinatorGameTooltip:Initialize()
@@ -79,6 +80,7 @@ function AltinatorAddon:OnDisable()
    self:UnregisterEvent("TRADE_SKILL_SHOW")
    self:UnregisterEvent("TRADE_SKILL_UPDATE")
    self:UnregisterEvent("CRAFT_UPDATE")
+   self:UnregisterEvent("BANKFRAME_OPENED")
 end
 
 function AltinatorAddon:PLAYER_ENTERING_WORLD(self, isLogin, isReload)
@@ -145,13 +147,25 @@ function AltinatorAddon:CRAFT_UPDATE()
    AltinatorAddon:ScheduleTimer(AltinatorNS.AltinatorData.ScanEnchantingRecipes, 0.5)	
 end
 
+function AltinatorAddon:BANKFRAME_OPENED()
+   AltinatorAddon:ScheduleTimer(AltinatorNS.AltinatorData.ScanBank, 0.5)	
+end
+
 function AltinatorAddon:GetMainFrame()
    return AltinatorFrame or AltinatorAddon:CreateMainFrame()
 end
 
 function AltinatorAddon:ToggleFrame()
-   local f = AltinatorAddon:GetMainFrame()
-   f:SetShown(not f:IsShown())
+   local frame = AltinatorAddon:GetMainFrame()
+   frame:SetShown(not frame:IsShown())
+   if frame:IsShown() then
+      for i = 1, #AltinatorNS.Tabs do
+         local tab = AltinatorNS.Tabs[i]
+         if tab.content:IsShown() and tab.content.Refresh then
+            tab.content:Refresh(tab.content)
+         end
+      end
+   end
 end
 
 local function Tab_OnClick(self)
@@ -159,7 +173,9 @@ local function Tab_OnClick(self)
 
    for i = 1, #AltinatorNS.Tabs do
       local tab = AltinatorNS.Tabs[i]
-      tab.content:Hide()
+      if tab.content:IsShown() then
+         tab.content:Hide()
+      end
    end
    SetTitle("Altinator - " .. self.Name)
    self.content:LoadContent(self.content)
@@ -243,10 +259,14 @@ function AltinatorAddon:CreateMainFrame()
 
    local overView, activityView, gearView, searchView, AttunementView = CreateTabs(AltinatorFrame, L["Overview"], L["Activity"], L["Gear"], L["Search"], L["Attunement"])
    overView.content.LoadContent = AltinatorNS.AltinatorOverviewFrame.Initialize
+   overView.content.Refresh = AltinatorNS.AltinatorOverviewFrame.Initialize
    activityView.content.LoadContent = AltinatorNS.AltinatorActivityFrame.Initialize
+   activityView.content.Refresh = AltinatorNS.AltinatorActivityFrame.Initialize
    gearView.content.LoadContent = AltinatorNS.AltinatorGearFrame.Initialize
+   gearView.content.Refresh = AltinatorNS.AltinatorGearFrame.Initialize
    searchView.content.LoadContent = AltinatorNS.AltinatorSearchFrame.Initialize
    AttunementView.content.LoadContent = AltinatorNS.AltinatorAttunementFrame.Initialize
+   AttunementView.content.Refresh = AltinatorNS.AltinatorAttunementFrame.Initialize
 
    Tab_OnClick(overView)
    tinsert(UISpecialFrames, "AltinatorFrame");

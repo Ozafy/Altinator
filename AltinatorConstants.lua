@@ -88,17 +88,16 @@ C["ResetTimes"] = {
 		hour = 4,
 	},
 }
-
 C["Attunements"] = {
 	[1] = {
 		name = "Scarlet Monestary",
-		type = 1,
+		type = 3,
 		attunementItem = 7146,
 		iconTexture = "Interface\\Icons\\inv_misc_key_01"
 	},
 	[2] = {
 		name = "Gnomeregan",
-		type = 1,
+		type = 3,
 		attunementItem = 6893,
 		iconTexture = "Interface\\Icons\\inv_misc_key_06"
 	},
@@ -122,35 +121,53 @@ C["Attunements"] = {
 	},
 	[6] = {
 		name = "Blackrock Depths",
-		type = 1,
+		type = 3,
 		attunementItem = 11000,
 		iconTexture = "Interface\\Icons\\inv_misc_key_08"
 	},
 	[7] = {
 		name = "Dire Maul",
-		type = 1,
+		type = 3,
 		attunementItem = 18249,
 		iconTexture = "Interface\\Icons\\inv_misc_key_10"
 	},
 	[8] = {
+		name = "Scholomance",
+		type = 3,
+		attunementItem = 13704,
+		iconTexture = "Interface\\Icons\\inv_misc_key_11"
+	},
+	[9] = {
+		name = "Stratholme",
+		type = 3,
+		attunementItem = 12382,
+		iconTexture = "Interface\\Icons\\inv_misc_key_13"
+	},
+	[10] = {
+		name = "Upper Blackrock Spire",
+		type = 1,
+		attunementItem = 12344,
+		iconTexture = "Interface\\Icons\\inv_jewelry_ring_01"
+	},
+	[11] = {
 		name = "Onyxia's Lair",
 		type = 1,
 		attunementItem = 16309,
 		iconTexture = "Interface\\Icons\\inv_jewelry_talisman_11"
 	},
-	[9] = {
+	[12] = {
 		name = "Molten Core",
 		type = 2,
 		attunementQuests = {7848},
 		iconTexture = "Interface\\Icons\\inv_hammer_unique_sulfuras"
 	},
-	[10] = {
+	[13] = {
 		name = "Blackwing Lair",
 		type = 2,
 		attunementQuests = {7761},
 		iconTexture = "Interface\\Icons\\inv_misc_head_dragon_black"
 	},
-	[11] = {
+	[14] = {
 		name = "Naxxramas",
 		type = 2,
 		attunementQuests = {9121,9122,9123},

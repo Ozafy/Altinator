@@ -18,23 +18,23 @@ function AltinatorAttunementFrame:Initialize(self)
     self.Header:SetText(L["AttunementTitle"])
 
     self.Frames = self.Frames or {}
-    for s, attunement in ipairs(C["Attunements"]) do
-        self.Frames["EmptyTextureFrame" .. s] = self.Frames["EmptyTextureFrame" .. s] or CreateFrame("Frame", nil, self)
-        self.Frames["EmptyTextureFrame" .. s]:SetSize(_ICON_SIZE, _ICON_SIZE)
-        self.Frames["EmptyTextureFrame" .. s]:SetPoint("LEFT", self.Header, "LEFT", ((s+1)*(_ICON_SIZE+_ICON_PADDING))+96, 0)
-        AltinatorNS:CreateInnerBorder(self.Frames["EmptyTextureFrame" .. s], 6)
+    for i, attunement in ipairs(C["Attunements"]) do
+        self.Frames["EmptyTextureFrame" .. i] = self.Frames["EmptyTextureFrame" .. i] or CreateFrame("Frame", nil, self)
+        self.Frames["EmptyTextureFrame" .. i]:SetSize(_ICON_SIZE, _ICON_SIZE)
+        self.Frames["EmptyTextureFrame" .. i]:SetPoint("LEFT", self.Header, "LEFT", ((i+1)*(_ICON_SIZE+_ICON_PADDING))+96, 0)
+        AltinatorNS:CreateInnerBorder(self.Frames["EmptyTextureFrame" .. i], 6)
 
-        self.Frames["EmptyTextureFrame" .. s].EmptyTexture = self.Frames["EmptyTextureFrame" .. s].EmptyTexture or self.Frames["EmptyTextureFrame" .. s]:CreateTexture(nil, "BACKGROUND")
-        self.Frames["EmptyTextureFrame" .. s].EmptyTexture:SetSize(_ICON_SIZE, _ICON_SIZE)
-        self.Frames["EmptyTextureFrame" .. s].EmptyTexture:SetPoint("CENTER")
-        self.Frames["EmptyTextureFrame" .. s].EmptyTexture:SetTexture(attunement.iconTexture)
+        self.Frames["EmptyTextureFrame" .. i].EmptyTexture = self.Frames["EmptyTextureFrame" .. i].EmptyTexture or self.Frames["EmptyTextureFrame" .. i]:CreateTexture(nil, "BACKGROUND")
+        self.Frames["EmptyTextureFrame" .. i].EmptyTexture:SetSize(_ICON_SIZE, _ICON_SIZE)
+        self.Frames["EmptyTextureFrame" .. i].EmptyTexture:SetPoint("CENTER")
+        self.Frames["EmptyTextureFrame" .. i].EmptyTexture:SetTexture(attunement.iconTexture)
 
-        self.Frames["EmptyTextureFrame" .. s].TooltipText = L["AttunementDungeons"][s]
-        self.Frames["EmptyTextureFrame" .. s]:SetScript("OnEnter", function(self)
+        self.Frames["EmptyTextureFrame" .. i].TooltipText = L["AttunementDungeons"][i]
+        self.Frames["EmptyTextureFrame" .. i]:SetScript("OnEnter", function(self)
             AltinatorNS.AltinatorTooltip:SetOwner(self, "ANCHOR_CURSOR")
             AltinatorNS.AltinatorTooltip:SetText(self.TooltipText)
         end)
-        self.Frames["EmptyTextureFrame" .. s]:SetScript("OnLeave", function(self)
+        self.Frames["EmptyTextureFrame" .. i]:SetScript("OnLeave", function(self)
             AltinatorNS.AltinatorTooltip:Hide()
         end)
     end
@@ -54,7 +54,7 @@ function AltinatorAttunementFrame:Initialize(self)
 
             scrollFrame.content.ClassFrames[i] = scrollFrame.content.ClassFrames[i] or scrollFrame.content:CreateTexture(nil, "BACKGROUND")
             scrollFrame.content.ClassFrames[i]:SetSize(_ICON_SIZE, _ICON_SIZE)
-            scrollFrame.content.ClassFrames[i]:SetPoint("TOPLEFT", _PADDING, (_HEIGHT * -1 * (totalCharacters-1)) - _HEIGHT)
+            scrollFrame.content.ClassFrames[i]:SetPoint("TOPLEFT", _PADDING, (_HEIGHT * -1 * (i-1)) - _HEIGHT)
             scrollFrame.content.ClassFrames[i]:SetTexture("Interface\\ICONS\\classicon_" .. char.Class.File)
             
             scrollFrame.content.CharNames[i] = scrollFrame.content.CharNames[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
@@ -65,20 +65,30 @@ function AltinatorAttunementFrame:Initialize(self)
 
             for j, attunement in ipairs(C["Attunements"]) do
                 local item = equipment[j]
-                scrollFrame.content["item" .. totalCharacters .. "i" .. j] = scrollFrame.content["item" .. totalCharacters .. "i" .. j] or CreateFrame("Frame", nil, scrollFrame.content)
-                scrollFrame.content["item" .. totalCharacters .. "i" .. j]:SetSize(_ICON_SIZE, _ICON_SIZE)
-                scrollFrame.content["item" .. totalCharacters .. "i" .. j]:SetPoint("LEFT", scrollFrame.content.ClassFrames[i], "LEFT", ((j+1)*(_ICON_SIZE+_ICON_PADDING))+96, 0)
+                scrollFrame.content["item" .. i .. "i" .. j] = scrollFrame.content["item" .. i .. "i" .. j] or CreateFrame("Frame", nil, scrollFrame.content)
+                scrollFrame.content["item" .. i .. "i" .. j]:SetSize(_ICON_SIZE, _ICON_SIZE)
+                scrollFrame.content["item" .. i .. "i" .. j]:SetPoint("LEFT", scrollFrame.content.ClassFrames[i], "LEFT", ((j+1)*(_ICON_SIZE+_ICON_PADDING))+96, 0)
 
-                scrollFrame.content["item" .. totalCharacters .. "i" .. j].Texture = scrollFrame.content["item" .. totalCharacters .. "i" .. j].Texture or scrollFrame.content["item" .. totalCharacters .. "i" .. j]:CreateTexture(nil, "BACKGROUND")
-                scrollFrame.content["item" .. totalCharacters .. "i" .. j].Texture:SetSize(_ICON_SIZE, _ICON_SIZE)
-                scrollFrame.content["item" .. totalCharacters .. "i" .. j].Texture:SetPoint("CENTER")
-                scrollFrame.content["item" .. totalCharacters .. "i" .. j].Texture:SetTexture(attunement.iconTexture)
+                scrollFrame.content["item" .. i .. "i" .. j].Texture = scrollFrame.content["item" .. i .. "i" .. j].Texture or scrollFrame.content["item" .. i .. "i" .. j]:CreateTexture(nil, "BACKGROUND")
+                scrollFrame.content["item" .. i .. "i" .. j].Texture:SetSize(_ICON_SIZE, _ICON_SIZE)
+                scrollFrame.content["item" .. i .. "i" .. j].Texture:SetPoint("CENTER")
+                scrollFrame.content["item" .. i .. "i" .. j].Texture:SetTexture(attunement.iconTexture)
+
+                scrollFrame.content["item" .. i .. "i" .. j].TooltipText = L["AttunementDungeons"][j]
+                scrollFrame.content["item" .. i .. "i" .. j]:SetScript("OnEnter", function(self)
+                    AltinatorNS.AltinatorTooltip:SetOwner(self, "ANCHOR_CURSOR")
+                    AltinatorNS.AltinatorTooltip:SetText(self.TooltipText)
+                end)
+                scrollFrame.content["item" .. i .. "i" .. j]:SetScript("OnLeave", function(self)
+                    AltinatorNS.AltinatorTooltip:Hide()
+                end)
 
                 if char.Attunements and char.Attunements[j] and char.Attunements[j].Completed then
-                    AltinatorNS:CreateInnerBorder(scrollFrame.content["item" .. totalCharacters .. "i" .. j], 2)
+                    AltinatorNS:CreateInnerBorder(scrollFrame.content["item" .. i .. "i" .. j], 2)
+                    scrollFrame.content["item" .. i .. "i" .. j].Texture:SetAlpha(1)
                 else
-                    AltinatorNS:CreateInnerBorder(scrollFrame.content["item" .. totalCharacters .. "i" .. j], -1)
-                    scrollFrame.content["item" .. totalCharacters .. "i" .. j].Texture:SetAlpha(0.5)
+                    AltinatorNS:CreateInnerBorder(scrollFrame.content["item" .. i .. "i" .. j], -1)
+                    scrollFrame.content["item" .. i .. "i" .. j].Texture:SetAlpha(0.5)
                 end
             end
 

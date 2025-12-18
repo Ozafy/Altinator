@@ -24,7 +24,17 @@ local function AutoReturnMail(mailData)
       })
    end
 end
-
+local function FindInBagSlot(bags, itemId)
+   for _, bag in ipairs(bags) do
+      for slot=1, C_Container.GetContainerNumSlots(bag) do
+         local itemID = C_Container.GetContainerItemID(bag, slot)
+         if itemID == itemId then
+            return true
+         end
+      end
+   end
+   return false
+end
 function AltinatorData:SavePlayerDataLogin()
    local name, realm = UnitFullName("player")
    local data = AltinatorNS:MergeObjects(AltinatorNS.AltinatorDB.global.characters[name .. "-" .. realm] or {}, AltinatorNS.AltinatorAddon.CurrentCharacter)
@@ -111,17 +121,62 @@ function AltinatorData:SavePlayerDataLogin()
    data.Attunements = data.Attunements or {}
    for i, attunement in ipairs(C["Attunements"]) do
       data.Attunements[i] = data.Attunements[i] or {}
-      if attunement.type==2 and not data.Attunements[i].Completed then
-         for j=1, #attunement.attunementQuests do
-            if C_QuestLog.IsQuestFlaggedCompleted(attunement.attunementQuests[j]) then
-               data.Attunements[i].Completed = true
-               break
+      if not data.Attunements[i].Completed then
+         if attunement.type==1 then
+            local bagSlots = {
+            }
+            for bag=0, NUM_BAG_SLOTS do
+               table.insert(bagSlots, bag)
+            end
+            if attunement.attunementItem then
+               local hasItem = FindInBagSlot(bagSlots, attunement.attunementItem)
+               if hasItem then
+                  data.Attunements[i].Completed = true
+               end
+            end
+         elseif attunement.type==2 then
+            for j=1, #attunement.attunementQuests do
+               if C_QuestLog.IsQuestFlaggedCompleted(attunement.attunementQuests[j]) then
+                  data.Attunements[i].Completed = true
+                  break
+               end
+            end
+         elseif attunement.type==3 then
+            if attunement.attunementItem then
+               local bagSlots = {
+                  KEYRING_CONTAINER
+               }
+               local hasItem = FindInBagSlot(bagSlots, attunement.attunementItem)
+               if hasItem then
+                  data.Attunements[i].Completed = true
+               end
             end
          end
       end
    end
 end
-
+function AltinatorData:ScanBank()
+   local bankSlots = {
+      BANK_CONTAINER,
+   }
+   for bag=NUM_BAG_SLOTS+1, NUM_BAG_SLOTS+NUM_BANKBAGSLOTS do
+      table.insert(bankSlots, bag)
+   end
+   local data = AltinatorNS.AltinatorAddon.CurrentCharacter
+   for i, attunement in ipairs(C["Attunements"]) do
+      data.Attunements[i] = data.Attunements[i] or {}
+      if not data.Attunements[i].Completed then
+         if attunement.type==1 then
+            if attunement.attunementItem then
+               local hasItem = FindInBagSlot(bankSlots, attunement.attunementItem)
+               if hasItem then
+                  data.Attunements[i].Completed = true
+               end
+            end
+         end
+      end
+   end
+end
 function AltinatorData:ClearPlayerMailData()
    local data = AltinatorNS.AltinatorAddon.CurrentCharacter
    data.Mail = data.Mail or {}
