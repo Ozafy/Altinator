@@ -5,6 +5,7 @@ A simple World of Warcraft add-on that displays various information about your a
 - Activity shows when you last logged in, mails between alts, auctions,...
 - Gear shows a table of all currently equipped gear
 - Search allows you to search all of your alts bags and banks
+- Attunements shows all available attunements and keys
 
 You can open the addon using the minimap icon or by typing "/alt". You can open the options using the default blizzard options panel or by typing "/alt o".
 
@@ -20,3 +21,6 @@ You can open the addon using the minimap icon or by typing "/alt". You can open 
 
 ## Search
 ![Search](https://raw.github.com/Ozafy/Altinator/main/Screenshots/Search.png)
+
+## Attunements
+![Attunements](https://raw.github.com/Ozafy/Altinator/main/Screenshots/Attunements.png)
