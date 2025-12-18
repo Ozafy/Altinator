@@ -19,8 +19,8 @@ You can open the addon using the minimap icon or by typing "/alt". You can open 
 ## Gear
 ![Gear](https://raw.github.com/Ozafy/Altinator/main/Screenshots/Gear.png)
 
-## Search
-![Search](https://raw.github.com/Ozafy/Altinator/main/Screenshots/Search.png)
-
 ## Attunements
 ![Attunements](https://raw.github.com/Ozafy/Altinator/main/Screenshots/Attunements.png)
+
+## Search
+![Search](https://raw.github.com/Ozafy/Altinator/main/Screenshots/Search.png)

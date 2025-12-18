@@ -257,16 +257,17 @@ function AltinatorAddon:CreateMainFrame()
       Settings.OpenToCategory(AltinatorNS.AltinatorOptions.Category:GetID())
    end)
 
-   local overView, activityView, gearView, searchView, AttunementView = CreateTabs(AltinatorFrame, L["Overview"], L["Activity"], L["Gear"], L["Search"], L["Attunement"])
+   local overView, activityView, gearView, AttunementView, searchView = CreateTabs(AltinatorFrame, L["Overview"], L["Activity"], L["Gear"], L["Attunement"], L["Search"])
    overView.content.LoadContent = AltinatorNS.AltinatorOverviewFrame.Initialize
    overView.content.Refresh = AltinatorNS.AltinatorOverviewFrame.Initialize
    activityView.content.LoadContent = AltinatorNS.AltinatorActivityFrame.Initialize
    activityView.content.Refresh = AltinatorNS.AltinatorActivityFrame.Initialize
    gearView.content.LoadContent = AltinatorNS.AltinatorGearFrame.Initialize
    gearView.content.Refresh = AltinatorNS.AltinatorGearFrame.Initialize
-   searchView.content.LoadContent = AltinatorNS.AltinatorSearchFrame.Initialize
    AttunementView.content.LoadContent = AltinatorNS.AltinatorAttunementFrame.Initialize
    AttunementView.content.Refresh = AltinatorNS.AltinatorAttunementFrame.Initialize
+   searchView.content.LoadContent = AltinatorNS.AltinatorSearchFrame.Initialize
+
 
    Tab_OnClick(overView)
    tinsert(UISpecialFrames, "AltinatorFrame");
