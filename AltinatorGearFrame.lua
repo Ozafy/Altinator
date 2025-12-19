@@ -66,7 +66,7 @@ function AltinatorGearFrame:Initialize(self)
 
                 for j = 2, 20 do
                     local item = equipment[j]
-                    scrollFrame.content["item" .. i .. "i" .. j] = scrollFrame.content["item" .. i .. "i" .. j] or CreateFrame("Frame", nil, scrollFrame.content)
+                    scrollFrame.content["item" .. i .. "i" .. j] = scrollFrame.content["item" .. i .. "i" .. j] or CreateFrame("BUTTON", nil, scrollFrame.content)
                     scrollFrame.content["item" .. i .. "i" .. j]:SetSize(_ICON_SIZE, _ICON_SIZE)
                     scrollFrame.content["item" .. i .. "i" .. j]:SetPoint("LEFT", scrollFrame.content.ClassFrames[i], "LEFT", (j*(_ICON_SIZE+_ICON_PADDING))+96, 0)
                     if item["quality"] then
@@ -85,8 +85,14 @@ function AltinatorGearFrame:Initialize(self)
 
                     if item["quality"] then
                         scrollFrame.content["item" .. i .. "i" .. j].TooltipItemLink = item["itemLink"]
+                        scrollFrame.content["item" .. i .. "i" .. j]:RegisterForClicks("AnyUp")
+                        scrollFrame.content["item" .. i .. "i" .. j]:SetScript("OnClick", function(self, button, down)
+                            if IsModifiedClick() and ChatFrame1EditBox and ChatFrame1EditBox:IsVisible() then
+                                ChatFrame1EditBox:Insert(self.TooltipItemLink)
+                            end
+                        end)
                         scrollFrame.content["item" .. i .. "i" .. j]:SetScript("OnEnter", function(self)
-                        AltinatorNS.AltinatorTooltip:SetOwner(self, "ANCHOR_CURSOR")
+                            AltinatorNS.AltinatorTooltip:SetOwner(self, "ANCHOR_CURSOR")
                             AltinatorNS.AltinatorTooltip:SetHyperlink(self.TooltipItemLink)
                         end)
                         scrollFrame.content["item" .. i .. "i" .. j]:SetScript("OnLeave", function(self)

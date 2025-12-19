@@ -52,7 +52,7 @@ local function SearchResult(result)
         local char = AltinatorDB.global.characters[item["source"]["character"]]
         if char then
             --local itemName, _, _, _, _, _, _, _, _, itemTexture = GetItemInfo(item["itemID"])
-            frame.Frames[i] = frame.Frames[i] or CreateFrame("Frame", nil, frame)
+            frame.Frames[i] = frame.Frames[i] or CreateFrame("BUTTON", nil, frame)
             frame.Frames[i].Frames = frame.Frames[i].Frames or {}
             frame.Frames[i]:Show()
             frame.Frames[i]:SetSize(ICON_SIZE, ICON_SIZE)
@@ -67,13 +67,19 @@ local function SearchResult(result)
                 frame.Frames[i].Frames["texture"]:SetTexture(136235)
             end
 
-            frame.Frames[i].Frames["texture"].TooltipItemLink = item["itemLink"]
-            frame.Frames[i].Frames["texture"]:SetScript("OnEnter", function(self)
-            AltinatorNS.AltinatorTooltip:SetOwner(self, "ANCHOR_CURSOR")
-            AltinatorNS.AltinatorTooltip:SetHyperlink(self.TooltipItemLink)
+            frame.Frames[i].TooltipItemLink = item["itemLink"]
+            frame.Frames[i]:RegisterForClicks("AnyUp")
+            frame.Frames[i]:SetScript("OnClick", function(self, button, down)
+                if IsModifiedClick() and ChatFrame1EditBox and ChatFrame1EditBox:IsVisible() then
+                    ChatFrame1EditBox:Insert(self.TooltipItemLink)
+                end
             end)
-            frame.Frames[i].Frames["texture"]:SetScript("OnLeave", function(self)
-            AltinatorNS.AltinatorTooltip:Hide()
+            frame.Frames[i]:SetScript("OnEnter", function(self)
+                AltinatorNS.AltinatorTooltip:SetOwner(self, "ANCHOR_CURSOR")
+                AltinatorNS.AltinatorTooltip:SetHyperlink(self.TooltipItemLink)
+            end)
+                frame.Frames[i]:SetScript("OnLeave", function(self)
+                AltinatorNS.AltinatorTooltip:Hide()
             end)
 
             frame.Frames[i].Frames["itemNameString"] = frame.Frames[i].Frames["itemNameString"] or frame.Frames[i]:CreateFontString(nil,"ARTWORK","GameFontHighlight")
