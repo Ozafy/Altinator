@@ -40,6 +40,11 @@ function AltinatorOverviewFrame:Initialize(self)
     self.BagsHeader:SetPoint("LEFT", self.LevelHeader, "LEFT", 80, 0)
     self.BagsHeader:SetText(L["Bags"])
 
+    self.BankBagsHeader = self.BankBagsHeader or self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+    self.BankBagsHeader:SetPoint("LEFT", self.BagsHeader, "LEFT", 115, 0)
+    self.BankBagsHeader:SetText(L["BankBags"])
+
+
     local scrollFrame = self.ScrollFrame or AltinatorNS:CreateScrollFrame(self)
 
     local totalCharacters = 0
@@ -97,6 +102,10 @@ function AltinatorOverviewFrame:Initialize(self)
          scrollFrame.content.BagTexts = scrollFrame.content.BagTexts or {}
          scrollFrame.content.BagTexts[i] = scrollFrame.content.BagTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
          scrollFrame.content.BagTexts[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 585, 0)
+
+         scrollFrame.content.BankBagTexts = scrollFrame.content.BankBagTexts or {}
+         scrollFrame.content.BankBagTexts[i] = scrollFrame.content.BankBagTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+         scrollFrame.content.BankBagTexts[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 700, 0)
         if char.Containers then
             
             local bags = {}
@@ -113,28 +122,33 @@ function AltinatorOverviewFrame:Initialize(self)
 
             local bagText = ""
             for i, key in ipairs(bags) do
-                local bag = char.Containers.Bags[key]
-                if i > 1 then
-                    bagText = bagText .. "/"
-                end
-                bagText = bagText .. bag.Slots
-            end
-
-            if #bankBags > 0 then
-                bagText = bagText .. " |cFFAAAAAA["
-                for i, key in ipairs(bankBags) do
-                    local bag = char.Containers.Bank[key]
-                    if i > 1 then
-                        bagText = bagText .. "/"
-                    end
-                    bagText = bagText .. bag.Slots
-                end
-                bagText = bagText .. "]|r"
+               local bag = char.Containers.Bags[key]
+               if i > 1 then
+                  bagText = bagText .. "/"
+               end
+               bagText = bagText .. bag.Slots
             end
 
             scrollFrame.content.BagTexts[i]:SetText(bagText)
+
+            local bankText = ""
+            if #bankBags > 0 then
+               for i, key in ipairs(bankBags) do
+                  local bag = char.Containers.Bank[key]
+                  if i > 1 then
+                     bankText = bankText .. "/"
+                  end
+                  bankText = bankText .. bag.Slots
+               end
+            else
+               bankText = L["NoData"]
+            end
+
+            scrollFrame.content.BankBagTexts[i]:SetText(bankText)
+            
          else
             scrollFrame.content.BagTexts[i]:SetText(L["NoData"])
+            scrollFrame.content.BankBagTexts[i]:SetText(L["NoData"])
         end
 
         totalCharacters = totalCharacters + 1
