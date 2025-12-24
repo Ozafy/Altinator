@@ -6,55 +6,13 @@ local L = LibStub("AceLocale-3.0"):GetLocale(AddonName)
 local AltinatorOverviewFrame = {}
 AltinatorNS.AltinatorOverviewFrame = AltinatorOverviewFrame
 
-local function GetProfessionCooldownTooltip(tooltip, profession)
-   local cooldowns = AltinatorNS.AltinatorData:GetProfessionCooldowns(profession)
-   if #cooldowns > 0 then
-         for i, cd in ipairs(cooldowns) do
-         tooltip:AddLine(cd.Name .. ": " .. AltinatorNS:LongTimeSpanToString(cd.CooldownEndTime - time()))
-      end
-   else
-      tooltip:AddLine(L["ProfessionNoCooldowns"])
+local function bagsort(a, b)
+   if not a or not b then
+       return false
    end
-end
-
-local function CreateProfessionTexture(contentFrame, charIndex, anchor, baseOffset, iconSize, profIndex, id, profession)
-   local profPosition = profIndex
-   if C["SecondairyProfession"][id] then
-      profPosition = C["SecondairyProfessionOrder"][id] + 1 -- secondairy professions start after 2 normal professions
-   end
-   contentFrame.ProfessionIcons = contentFrame.ProfessionIcons or {}
-   contentFrame.ProfessionIcons[charIndex] = contentFrame.ProfessionIcons[charIndex] or {}
-   contentFrame.ProfessionIcons[charIndex][profIndex] = contentFrame.ProfessionIcons[charIndex][profIndex] or contentFrame:CreateTexture("Profession_Icon_" .. id, "BACKGROUND")
-   contentFrame.ProfessionIcons[charIndex][profIndex]:SetWidth(iconSize)
-   contentFrame.ProfessionIcons[charIndex][profIndex]:SetHeight(iconSize)
-   contentFrame.ProfessionIcons[charIndex][profIndex]:SetPoint("LEFT", anchor,"LEFT", baseOffset + (profPosition * 80), 0)
-   contentFrame.ProfessionIcons[charIndex][profIndex]:SetTexture("Interface\\ICONS\\" .. profession.File)
-
-   contentFrame.ProfessionIcons[charIndex][profIndex]:SetScript("OnEnter", function(self)
-      AltinatorNS.AltinatorTooltip:SetOwner(contentFrame, "ANCHOR_CURSOR")
-      AltinatorNS.AltinatorTooltip:SetText(profession.Name)
-      GetProfessionCooldownTooltip(AltinatorNS.AltinatorTooltip, profession)
-      AltinatorNS.AltinatorTooltip:Show()
-   end)
-   contentFrame.ProfessionIcons[charIndex][profIndex]:SetScript("OnLeave", function(self)
-      AltinatorNS.AltinatorTooltip:Hide()
-   end)
-
-   contentFrame.ProfessionTexts = contentFrame.ProfessionTexts or {}
-   contentFrame.ProfessionTexts[charIndex] = contentFrame.ProfessionTexts[charIndex] or {}
-   contentFrame.ProfessionTexts[charIndex][profIndex] = contentFrame.ProfessionTexts[charIndex][profIndex] or contentFrame:CreateFontString("Profession_Text_" .. id, "ARTWORK", "GameFontHighlight")
-   contentFrame.ProfessionTexts[charIndex][profIndex]:SetPoint("LEFT", anchor, "LEFT", baseOffset + 20 + (profPosition * 80), 0)
-   contentFrame.ProfessionTexts[charIndex][profIndex]:SetText(profession.Skill.."/"..profession.SkillMax)
-
-   contentFrame.ProfessionTexts[charIndex][profIndex]:SetScript("OnEnter", function(self)
-      AltinatorNS.AltinatorTooltip:SetOwner(contentFrame, "ANCHOR_CURSOR")
-      AltinatorNS.AltinatorTooltip:SetText(profession.Name)
-      GetProfessionCooldownTooltip(AltinatorNS.AltinatorTooltip, profession)
-      AltinatorNS.AltinatorTooltip:Show()
-   end)
-   contentFrame.ProfessionTexts[charIndex][profIndex]:SetScript("OnLeave", function(self)
-      AltinatorNS.AltinatorTooltip:Hide()
-   end)
+   local bagA = tonumber(AltinatorNS:SplitString(a, "_")[2])
+   local bagB = tonumber(AltinatorNS:SplitString(b, "_")[2])
+   return bagA < bagB
 end
 
 function AltinatorOverviewFrame:Initialize(self)
@@ -78,9 +36,9 @@ function AltinatorOverviewFrame:Initialize(self)
     self.LevelHeader:SetPoint("LEFT", self.MoneyHeader, "LEFT", 140, 0)
     self.LevelHeader:SetText(L["Level"])
 
-    self.ProfessionsHeader = self.ProfessionsHeader or self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-    self.ProfessionsHeader:SetPoint("LEFT", self.LevelHeader, "LEFT", 80, 0)
-    self.ProfessionsHeader:SetText(L["Professions"])
+    self.BagsHeader = self.BagsHeader or self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+    self.BagsHeader:SetPoint("LEFT", self.LevelHeader, "LEFT", 80, 0)
+    self.BagsHeader:SetText(L["Bags"])
 
     local scrollFrame = self.ScrollFrame or AltinatorNS:CreateScrollFrame(self)
 
@@ -95,29 +53,29 @@ function AltinatorOverviewFrame:Initialize(self)
     scrollFrame.content.MoneyTexts = scrollFrame.content.MoneyTexts or {}
     scrollFrame.content.LevelTexts = scrollFrame.content.LevelTexts or {}
     for i, name in ipairs(characters) do
-        local char = AltinatorDB.global.characters[name]
-        AltinatorNS:CreateCharacterName(scrollFrame.content, i, char, scrollFrame.content, _PADDING, _HEIGHT, _ICON_SIZE)
+         local char = AltinatorDB.global.characters[name]
+         AltinatorNS:CreateCharacterName(scrollFrame.content, i, char, scrollFrame.content, _PADDING, _HEIGHT, _ICON_SIZE)
 
-        scrollFrame.content.GuildNames[i] = scrollFrame.content.GuildNames[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-        scrollFrame.content.GuildNames[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 165, 0)
-        if char.Guild then
+         scrollFrame.content.GuildNames[i] = scrollFrame.content.GuildNames[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+         scrollFrame.content.GuildNames[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 165, 0)
+         if char.Guild then
             scrollFrame.content.GuildNames[i]:SetText(char.Guild.Name)
-        else
+         else
             scrollFrame.content.GuildNames[i]:SetText("")
-        end
-        
+         end
 
-        scrollFrame.content.MoneyTexts[i] = scrollFrame.content.MoneyTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-        scrollFrame.content.MoneyTexts[i]:SetPoint("RIGHT", scrollFrame.content.FactionIcons[i], "LEFT", 495, 0)
-        scrollFrame.content.MoneyTexts[i]:SetText(AltinatorNS:MoneyToGoldString(char.Money))
-        totalMoney = totalMoney + char.Money
 
-        scrollFrame.content.LevelTexts[i] = scrollFrame.content.LevelTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-        scrollFrame.content.LevelTexts[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 505, 0)
-        local level = char.Level
-        local r, g, b, hex = C_Item.GetItemQualityColor(math.floor(level/10))
-        scrollFrame.content.LevelTexts[i]:SetTextColor(r, g, b)
-        if level~=60 then
+         scrollFrame.content.MoneyTexts[i] = scrollFrame.content.MoneyTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+         scrollFrame.content.MoneyTexts[i]:SetPoint("RIGHT", scrollFrame.content.FactionIcons[i], "LEFT", 495, 0)
+         scrollFrame.content.MoneyTexts[i]:SetText(AltinatorNS:MoneyToGoldString(char.Money))
+         totalMoney = totalMoney + char.Money
+
+         scrollFrame.content.LevelTexts[i] = scrollFrame.content.LevelTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+         scrollFrame.content.LevelTexts[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 505, 0)
+         local level = char.Level
+         local r, g, b, hex = C_Item.GetItemQualityColor(math.floor(level/10))
+         scrollFrame.content.LevelTexts[i]:SetTextColor(r, g, b)
+         if level~=60 then
             --local RestPercent = (char.XP.Rested/char.XP.Needed * 100)
             local tmpRested = char.XP.Rested or 0
             local timeResting = (time() - (char.LastLogout or char.LastLogin) )/3600
@@ -125,25 +83,60 @@ function AltinatorOverviewFrame:Initialize(self)
             if not char.Resting then
             multiplier = C["RestedXPTimeSpanNotResting"]
             end
-            tmpRested = tmpRested + ((char.XP.Needed * (C["RestedXPBonus"] / multiplier * timeResting)) )
+            tmpRested = tmpRested + ((char.XP.Needed * (C["RestedXPBonus"] / multiplier * timeResting)))
             local RestPercent = (tmpRested/char.XP.Needed * 100)
             if RestPercent>150 then
             RestPercent = 150
             end
-            level = (("%.1f (\124cnHIGHLIGHT_LIGHT_BLUE:%d%%\124r)"):format(level + (char.XP.Current/char.XP.Needed), RestPercent))
+            level = (("%.1f \124cnHIGHLIGHT_LIGHT_BLUE:(%d%%)\124r"):format(level + (char.XP.Current/char.XP.Needed), RestPercent))
+         end
+
+         scrollFrame.content.LevelTexts[i]:SetText(level)
+
+
+         scrollFrame.content.BagTexts = scrollFrame.content.BagTexts or {}
+         scrollFrame.content.BagTexts[i] = scrollFrame.content.BagTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+         scrollFrame.content.BagTexts[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 585, 0)
+        if char.Containers then
+            
+            local bags = {}
+            for  key in pairs(char.Containers.Bags) do
+                table.insert(bags, key)
+            end
+            table.sort(bags, bagsort)
+
+            local bankBags = {}
+            for  key in pairs(char.Containers.Bank) do
+                table.insert(bankBags, key)
+            end
+            table.sort(bankBags, bagsort)
+
+            local bagText = ""
+            for i, key in ipairs(bags) do
+                local bag = char.Containers.Bags[key]
+                if i > 1 then
+                    bagText = bagText .. "/"
+                end
+                bagText = bagText .. bag.Slots
+            end
+
+            if #bankBags > 0 then
+                bagText = bagText .. " |cFFAAAAAA["
+                for i, key in ipairs(bankBags) do
+                    local bag = char.Containers.Bank[key]
+                    if i > 1 then
+                        bagText = bagText .. "/"
+                    end
+                    bagText = bagText .. bag.Slots
+                end
+                bagText = bagText .. "]|r"
+            end
+
+            scrollFrame.content.BagTexts[i]:SetText(bagText)
+         else
+            scrollFrame.content.BagTexts[i]:SetText(L["NoData"])
         end
 
-        scrollFrame.content.LevelTexts[i]:SetText(level)
-
-        local profIndex = 0;
-        for id, profession in pairs(char.Professions) do
-            CreateProfessionTexture(scrollFrame.content, i, scrollFrame.content.FactionIcons[i], 585, _ICON_SIZE, profIndex, id, profession)
-            profIndex = profIndex+1
-        end
-        for id, profession in pairs(char.ProfessionsSecondairy) do
-            CreateProfessionTexture(scrollFrame.content, i, scrollFrame.content.FactionIcons[i], 585, _ICON_SIZE, profIndex, id, profession)
-            profIndex = profIndex+1
-        end
         totalCharacters = totalCharacters + 1
     end
 

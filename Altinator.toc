@@ -15,6 +15,7 @@ AltinatorData.lua
 AltinatorGameTooltip.lua
 AltinatorOverviewFrame.lua
 AltinatorActivityFrame.lua
+AltinatorProfessionFrame.lua
 AltinatorGearFrame.lua
 AltinatorSearchFrame.lua
 AltinatorAttunementFrame.lua

@@ -118,6 +118,11 @@ function AltinatorData:SavePlayerDataLogin()
       end
    end
 
+   data.Containers = data.Containers or {}
+   data.Containers.Bags = data.Containers.Bags or {}
+   data.Containers.Bank = data.Containers.Bank or {}
+
+
    data.Attunements = data.Attunements or {}
    for i, attunement in ipairs(C["Attunements"]) do
       data.Attunements[i] = data.Attunements[i] or {}
@@ -127,6 +132,11 @@ function AltinatorData:SavePlayerDataLogin()
             }
             for bag=0, NUM_BAG_SLOTS do
                table.insert(bagSlots, bag)
+               local containerSlots = C_Container.GetContainerNumSlots(bag)
+               if containerSlots then
+                  data.Containers.Bags["bag_" .. bag] = data.Containers.Bags["bag_" .. bag] or {}
+                  data.Containers.Bags["bag_" .. bag].Slots = containerSlots
+               end
             end
             if attunement.attunementItem then
                local hasItem = FindInBagSlot(bagSlots, attunement.attunementItem)
@@ -156,13 +166,18 @@ function AltinatorData:SavePlayerDataLogin()
    end
 end
 function AltinatorData:ScanBank()
+   local data = AltinatorNS.AltinatorAddon.CurrentCharacter
    local bankSlots = {
       BANK_CONTAINER,
    }
    for bag=NUM_BAG_SLOTS+1, NUM_BAG_SLOTS+NUM_BANKBAGSLOTS do
       table.insert(bankSlots, bag)
+      local containerSlots = C_Container.GetContainerNumSlots(bag)
+      if containerSlots then
+         data.Containers.Bank["bank_" .. bag] = data.Containers.Bank["bank_" .. bag] or {}
+         data.Containers.Bank["bank_" .. bag].Slots = containerSlots
+      end
    end
-   local data = AltinatorNS.AltinatorAddon.CurrentCharacter
    for i, attunement in ipairs(C["Attunements"]) do
       data.Attunements[i] = data.Attunements[i] or {}
       if not data.Attunements[i].Completed then
