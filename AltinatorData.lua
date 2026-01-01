@@ -81,7 +81,7 @@ function AltinatorData:SavePlayerDataLogin()
    data.XP.Needed=UnitXPMax("player")
    data.XP.Rested=GetXPExhaustion()
 
-   data.Professions=data.Professions or {}
+   data.Professions= {}
    data.ProfessionsSecondairy=data.ProfessionsSecondairy or {}
    local profNames_rev = tInvert(L["ProfessionIDs"])
    local skillsFound = 0
