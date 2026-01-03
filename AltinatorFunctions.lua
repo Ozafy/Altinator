@@ -249,13 +249,16 @@ function AltinatorNS:ScrollFrame_OnMouseWheel(self, delta)
 end
 
 function AltinatorNS:ItemOnClick(item)
-   if IsModifiedClick() and ChatFrame1EditBox and ChatFrame1EditBox:IsVisible() then
+   if IsShiftKeyDown() and ChatFrame1EditBox and ChatFrame1EditBox:IsVisible() then
       ChatFrame1EditBox:Insert(item.TooltipItemLink)
+   end
+   if IsControlKeyDown() then
+      DressUpItemLink(item.TooltipItemLink)
    end
 end
 
 function AltinatorNS:ItemOnEnter(item)
-   AltinatorNS.AltinatorTooltip:SetOwner(item, "ANCHOR_CURSOR")
+   AltinatorNS.AltinatorTooltip:SetOwner(item, "ANCHOR_BOTTOMRIGHT")
    AltinatorNS.AltinatorTooltip:SetHyperlink(item.TooltipItemLink)
    if IsShiftKeyDown() then
       GameTooltip_ShowCompareItem(AltinatorNS.AltinatorTooltip)
