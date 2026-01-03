@@ -70,16 +70,13 @@ local function SearchResult(result)
             frame.Frames[i].TooltipItemLink = item["itemLink"]
             frame.Frames[i]:RegisterForClicks("AnyUp")
             frame.Frames[i]:SetScript("OnClick", function(self, button, down)
-                if IsModifiedClick() and ChatFrame1EditBox and ChatFrame1EditBox:IsVisible() then
-                    ChatFrame1EditBox:Insert(self.TooltipItemLink)
-                end
+                AltinatorNS:ItemOnClick(self)
             end)
             frame.Frames[i]:SetScript("OnEnter", function(self)
-                AltinatorNS.AltinatorTooltip:SetOwner(self, "ANCHOR_CURSOR")
-                AltinatorNS.AltinatorTooltip:SetHyperlink(self.TooltipItemLink)
+                AltinatorNS:ItemOnEnter(self)
             end)
                 frame.Frames[i]:SetScript("OnLeave", function(self)
-                AltinatorNS.AltinatorTooltip:Hide()
+                AltinatorNS:ItemOnLeave(self)
             end)
 
             frame.Frames[i].Frames["itemNameString"] = frame.Frames[i].Frames["itemNameString"] or frame.Frames[i]:CreateFontString(nil,"ARTWORK","GameFontHighlight")

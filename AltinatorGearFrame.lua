@@ -87,16 +87,13 @@ function AltinatorGearFrame:Initialize(self)
                         scrollFrame.content["item" .. i .. "i" .. j].TooltipItemLink = item["itemLink"]
                         scrollFrame.content["item" .. i .. "i" .. j]:RegisterForClicks("AnyUp")
                         scrollFrame.content["item" .. i .. "i" .. j]:SetScript("OnClick", function(self, button, down)
-                            if IsModifiedClick() and ChatFrame1EditBox and ChatFrame1EditBox:IsVisible() then
-                                ChatFrame1EditBox:Insert(self.TooltipItemLink)
-                            end
+                            AltinatorNS:ItemOnClick(self)
                         end)
                         scrollFrame.content["item" .. i .. "i" .. j]:SetScript("OnEnter", function(self)
-                            AltinatorNS.AltinatorTooltip:SetOwner(self, "ANCHOR_CURSOR")
-                            AltinatorNS.AltinatorTooltip:SetHyperlink(self.TooltipItemLink)
+                            AltinatorNS:ItemOnEnter(self)
                         end)
                         scrollFrame.content["item" .. i .. "i" .. j]:SetScript("OnLeave", function(self)
-                            AltinatorNS.AltinatorTooltip:Hide()
+                            AltinatorNS:ItemOnLeave(self)
                         end)
                     else
                         scrollFrame.content["item" .. i .. "i" .. j]:SetScript("OnEnter", nil)
