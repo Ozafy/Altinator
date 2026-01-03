@@ -6,6 +6,16 @@ local L = LibStub("AceLocale-3.0"):GetLocale(AddonName)
 local AltinatorProfessionFrame = {}
 AltinatorNS.AltinatorProfessionFrame = AltinatorProfessionFrame
 
+local function GetMaxSkillForLevel(level)
+   local maxSkill = 0
+   for _, bracket in ipairs(C["ProfessionBrackets"]) do
+      if level >= bracket.minLevel then
+         maxSkill = bracket.maxSkill
+      end
+   end
+   return maxSkill
+end
+
 local function GetProfessionCooldownTooltip(tooltip, cooldowns)
    if #cooldowns > 0 then
          for i, cd in ipairs(cooldowns) do
@@ -16,7 +26,7 @@ local function GetProfessionCooldownTooltip(tooltip, cooldowns)
    end
 end
 
-local function CreateProfessionTexture(contentFrame, charIndex, anchor, baseOffset, iconSize, profIndex, id, profession)
+local function CreateProfessionTexture(char, contentFrame, charIndex, anchor, baseOffset, iconSize, profIndex, id, profession)
    local profPosition = profIndex
    if C["SecondairyProfession"][id] then
       profPosition = C["SecondairyProfessionOrder"][id] + 1 -- secondairy professions start after 2 normal professions
@@ -34,6 +44,15 @@ local function CreateProfessionTexture(contentFrame, charIndex, anchor, baseOffs
    contentFrame.ProfessionTexts[charIndex][profIndex] = contentFrame.ProfessionTexts[charIndex][profIndex] or contentFrame:CreateFontString("Profession_Text_" .. id, "ARTWORK", "GameFontHighlight")
    contentFrame.ProfessionTexts[charIndex][profIndex]:SetPoint("LEFT", anchor, "LEFT", baseOffset + 20 + (profPosition * 80), 0)
    contentFrame.ProfessionTexts[charIndex][profIndex]:SetText(profession.Skill.."/"..profession.SkillMax)
+   local levelPerc = profession.Skill/profession.SkillMax*100
+   local brackets = 5
+   local maxSkill = GetMaxSkillForLevel(char.Level)
+   if profession.SkillMax==maxSkill and profession.Skill==maxSkill then
+      brackets = 6
+   end
+   levelPerc = levelPerc/10*brackets
+   local r, g, b, hex = C_Item.GetItemQualityColor(math.floor(levelPerc/10))
+   contentFrame.ProfessionTexts[charIndex][profIndex]:SetTextColor(r, g, b)
 end
 
 function AltinatorProfessionFrame:Initialize(self)
@@ -68,7 +87,7 @@ function AltinatorProfessionFrame:Initialize(self)
          local cooldowns = {}
          local profIndex = 0;
          for id, profession in pairs(char.Professions) do
-            CreateProfessionTexture(scrollFrame.content, i, scrollFrame.content.FactionIcons[i], 165, _ICON_SIZE, profIndex, id, profession)
+            CreateProfessionTexture(char, scrollFrame.content, i, scrollFrame.content.FactionIcons[i], 165, _ICON_SIZE, profIndex, id, profession)
             local profCooldowns = AltinatorNS.AltinatorData:GetProfessionCooldowns(profession)
             for _, cd in ipairs(profCooldowns) do
                print("CD found for " .. name .. " profession " .. profession.Name)
@@ -77,7 +96,7 @@ function AltinatorProfessionFrame:Initialize(self)
             profIndex = profIndex+1
          end
          for id, profession in pairs(char.ProfessionsSecondairy) do
-            CreateProfessionTexture(scrollFrame.content, i, scrollFrame.content.FactionIcons[i], 165, _ICON_SIZE, profIndex, id, profession)
+            CreateProfessionTexture(char, scrollFrame.content, i, scrollFrame.content.FactionIcons[i], 165, _ICON_SIZE, profIndex, id, profession)
             local secCooldowns = AltinatorNS.AltinatorData:GetProfessionCooldowns(profession)
             for _, cd in ipairs(secCooldowns) do
                print("Secondairy CD found for " .. name .. " profession " .. profession.Name)

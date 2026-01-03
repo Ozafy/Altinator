@@ -14,6 +14,28 @@ AltinatorNS.C = C
 C["MajorDBVersion"] = 1
 C["Width"] = 1024
 C["Height"] = 576
+C["ProfessionBrackets"] = {
+	[1] = {
+		name = "Apprentice",
+		maxSkill = 75,
+		minLevel = 1
+	},
+	[2] = {
+		name = "Journeyman",
+		maxSkill = 150,
+		minLevel = 10
+	},
+	[3] = {
+		name = "Expert",
+		maxSkill = 225,
+		minLevel = 20
+	},
+	[4] = {
+		name = "Artisan",
+		maxSkill = 300,
+		minLevel = 35
+	}
+}
 C["ProfessionIcons"]= {
     [129] = "spell_holy_sealofsacrifice",
     [164] = "trade_blacksmithing",
