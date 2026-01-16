@@ -90,7 +90,7 @@ function AltinatorProfessionFrame:Initialize(self)
             CreateProfessionTexture(char, scrollFrame.content, i, scrollFrame.content.FactionIcons[i], 165, _ICON_SIZE, profIndex, id, profession)
             local profCooldowns = AltinatorNS.AltinatorData:GetProfessionCooldowns(profession)
             for _, cd in ipairs(profCooldowns) do
-               print("CD found for " .. name .. " profession " .. profession.Name)
+               --print("CD found for " .. name .. " profession " .. profession.Name)
                table.insert(cooldowns, cd)
             end
             profIndex = profIndex+1
@@ -99,7 +99,7 @@ function AltinatorProfessionFrame:Initialize(self)
             CreateProfessionTexture(char, scrollFrame.content, i, scrollFrame.content.FactionIcons[i], 165, _ICON_SIZE, profIndex, id, profession)
             local secCooldowns = AltinatorNS.AltinatorData:GetProfessionCooldowns(profession)
             for _, cd in ipairs(secCooldowns) do
-               print("Secondairy CD found for " .. name .. " profession " .. profession.Name)
+               --print("Secondairy CD found for " .. name .. " profession " .. profession.Name)
                table.insert(cooldowns, cd)
             end
             profIndex = profIndex+1
