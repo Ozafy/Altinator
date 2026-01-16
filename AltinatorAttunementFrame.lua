@@ -48,53 +48,47 @@ function AltinatorAttunementFrame:Initialize(self)
 
     for i, name in ipairs(characters) do
         local char = AltinatorDB.global.characters[name]
-        local charSyndicator = Syndicator.API.GetByCharacterFullName(name)
-        if (charSyndicator) then
-            local equipment = charSyndicator["equipped"]
 
-            scrollFrame.content.ClassFrames[i] = scrollFrame.content.ClassFrames[i] or scrollFrame.content:CreateTexture(nil, "BACKGROUND")
-            scrollFrame.content.ClassFrames[i]:SetSize(_ICON_SIZE, _ICON_SIZE)
-            scrollFrame.content.ClassFrames[i]:SetPoint("TOPLEFT", _PADDING, (_HEIGHT * -1 * (i-1)) - _HEIGHT)
-            scrollFrame.content.ClassFrames[i]:SetTexture("Interface\\ICONS\\classicon_" .. char.Class.File)
-            
-            scrollFrame.content.CharNames[i] = scrollFrame.content.CharNames[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-            scrollFrame.content.CharNames[i]:SetPoint("LEFT", scrollFrame.content.ClassFrames[i], "LEFT", _ICON_SIZE + _ICON_PADDING, 0)
-            scrollFrame.content.CharNames[i]:SetText(char.Name)
-            local cr, cg, cb, web = GetClassColor(char.Class.File)
-            scrollFrame.content.CharNames[i]:SetTextColor(cr, cg, cb)
+        scrollFrame.content.ClassFrames[i] = scrollFrame.content.ClassFrames[i] or scrollFrame.content:CreateTexture(nil, "BACKGROUND")
+        scrollFrame.content.ClassFrames[i]:SetSize(_ICON_SIZE, _ICON_SIZE)
+        scrollFrame.content.ClassFrames[i]:SetPoint("TOPLEFT", _PADDING, (_HEIGHT * -1 * (i-1)) - _HEIGHT)
+        scrollFrame.content.ClassFrames[i]:SetTexture("Interface\\ICONS\\classicon_" .. char.Class.File)
+        
+        scrollFrame.content.CharNames[i] = scrollFrame.content.CharNames[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+        scrollFrame.content.CharNames[i]:SetPoint("LEFT", scrollFrame.content.ClassFrames[i], "LEFT", _ICON_SIZE + _ICON_PADDING, 0)
+        scrollFrame.content.CharNames[i]:SetText(char.Name)
+        local cr, cg, cb, web = GetClassColor(char.Class.File)
+        scrollFrame.content.CharNames[i]:SetTextColor(cr, cg, cb)
 
-            for j, attunement in ipairs(C["Attunements"]) do
-                local item = equipment[j]
-                scrollFrame.content["item" .. i .. "i" .. j] = scrollFrame.content["item" .. i .. "i" .. j] or CreateFrame("Frame", nil, scrollFrame.content)
-                scrollFrame.content["item" .. i .. "i" .. j]:SetSize(_ICON_SIZE, _ICON_SIZE)
-                scrollFrame.content["item" .. i .. "i" .. j]:SetPoint("LEFT", scrollFrame.content.ClassFrames[i], "LEFT", ((j+1)*(_ICON_SIZE+_ICON_PADDING))+96, 0)
+        for j, attunement in ipairs(C["Attunements"]) do
+            scrollFrame.content["item" .. i .. "i" .. j] = scrollFrame.content["item" .. i .. "i" .. j] or CreateFrame("Frame", nil, scrollFrame.content)
+            scrollFrame.content["item" .. i .. "i" .. j]:SetSize(_ICON_SIZE, _ICON_SIZE)
+            scrollFrame.content["item" .. i .. "i" .. j]:SetPoint("LEFT", scrollFrame.content.ClassFrames[i], "LEFT", ((j+1)*(_ICON_SIZE+_ICON_PADDING))+96, 0)
 
-                scrollFrame.content["item" .. i .. "i" .. j].Texture = scrollFrame.content["item" .. i .. "i" .. j].Texture or scrollFrame.content["item" .. i .. "i" .. j]:CreateTexture(nil, "BACKGROUND")
-                scrollFrame.content["item" .. i .. "i" .. j].Texture:SetSize(_ICON_SIZE, _ICON_SIZE)
-                scrollFrame.content["item" .. i .. "i" .. j].Texture:SetPoint("CENTER")
-                scrollFrame.content["item" .. i .. "i" .. j].Texture:SetTexture(attunement.iconTexture)
+            scrollFrame.content["item" .. i .. "i" .. j].Texture = scrollFrame.content["item" .. i .. "i" .. j].Texture or scrollFrame.content["item" .. i .. "i" .. j]:CreateTexture(nil, "BACKGROUND")
+            scrollFrame.content["item" .. i .. "i" .. j].Texture:SetSize(_ICON_SIZE, _ICON_SIZE)
+            scrollFrame.content["item" .. i .. "i" .. j].Texture:SetPoint("CENTER")
+            scrollFrame.content["item" .. i .. "i" .. j].Texture:SetTexture(attunement.iconTexture)
 
-                scrollFrame.content["item" .. i .. "i" .. j].TooltipText = L["AttunementDungeons"][j]
-                scrollFrame.content["item" .. i .. "i" .. j]:SetScript("OnEnter", function(self)
-                    AltinatorNS.AltinatorTooltip:SetOwner(self, "ANCHOR_CURSOR")
-                    AltinatorNS.AltinatorTooltip:SetText(self.TooltipText)
-                end)
-                scrollFrame.content["item" .. i .. "i" .. j]:SetScript("OnLeave", function(self)
-                    AltinatorNS.AltinatorTooltip:Hide()
-                end)
+            scrollFrame.content["item" .. i .. "i" .. j].TooltipText = L["AttunementDungeons"][j]
+            scrollFrame.content["item" .. i .. "i" .. j]:SetScript("OnEnter", function(self)
+                AltinatorNS.AltinatorTooltip:SetOwner(self, "ANCHOR_CURSOR")
+                AltinatorNS.AltinatorTooltip:SetText(self.TooltipText)
+            end)
+            scrollFrame.content["item" .. i .. "i" .. j]:SetScript("OnLeave", function(self)
+                AltinatorNS.AltinatorTooltip:Hide()
+            end)
 
-                if char.Attunements and char.Attunements[j] and char.Attunements[j].Completed then
-                    AltinatorNS:CreateInnerBorder(scrollFrame.content["item" .. i .. "i" .. j], 2)
-                    scrollFrame.content["item" .. i .. "i" .. j].Texture:SetAlpha(1)
-                else
-                    AltinatorNS:CreateInnerBorder(scrollFrame.content["item" .. i .. "i" .. j], -1)
-                    scrollFrame.content["item" .. i .. "i" .. j].Texture:SetAlpha(0.5)
-                end
+            if char.Attunements and char.Attunements[j] and char.Attunements[j].Completed then
+                AltinatorNS:CreateInnerBorder(scrollFrame.content["item" .. i .. "i" .. j], 2)
+                scrollFrame.content["item" .. i .. "i" .. j].Texture:SetAlpha(1)
+            else
+                AltinatorNS:CreateInnerBorder(scrollFrame.content["item" .. i .. "i" .. j], -1)
+                scrollFrame.content["item" .. i .. "i" .. j].Texture:SetAlpha(0.5)
             end
-
-            totalCharacters = totalCharacters + 1
         end
 
+        totalCharacters = totalCharacters + 1
 
     end
     scrollFrame.content:SetSize(C["Width"]-42, _HEIGHT * totalCharacters)

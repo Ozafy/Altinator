@@ -5,27 +5,21 @@ local L = LibStub("AceLocale-3.0"):GetLocale(AddonName)
 
 local Altinatoricon = LibStub("LibDBIcon-1.0")
 local AltinatorOptionsCategory, AltinatorOptionsLayout = Settings.RegisterVerticalLayoutCategory(AddonName)
+--local AltinatorCharacterOptionsCategory, AltinatorCharacterOptionsLayout = Settings.RegisterVerticalLayoutSubcategory(AltinatorOptionsCategory, AddonName)
+
 
 local AltinatorOptions = {}
 AltinatorNS.AltinatorOptions = AltinatorOptions
 AltinatorNS.AltinatorOptions.Category = AltinatorOptionsCategory
 AltinatorNS.AltinatorOptions.Layout = AltinatorOptionsLayout
+--AltinatorNS.AltinatorOptions.CharacterCategory = AltinatorCharacterOptionsCategory
+--AltinatorNS.AltinatorOptions.CharacterLayout = AltinatorCharacterOptionsLayout
 
 local function OnMinimapSettingChanged(setting, value)
    if value then
-      AltinatorNS.AltinatorDB.profile.minimap.hide = true
       Altinatoricon:Hide(AddonName)
    else
-      AltinatorNS.AltinatorDB.profile.minimap.hide = false
       Altinatoricon:Show(AddonName)
-   end
-end
-
-local function OnRecipeTooltipSettingChanged(setting, value)
-   if value then
-      AltinatorNS.AltinatorDB.profile.settings.showRecipeTooltips = true
-   else
-      AltinatorNS.AltinatorDB.profile.settings.showRecipeTooltips = false
    end
 end
 
@@ -72,7 +66,7 @@ local function DeleteCharacter()
    end
 end
 
-function AltinatorOptions:Initialize()
+function CreateOptionsCategory()
     local name = L["OptionsSettingsHeader"];
     local data = { name = name };
     local initializer = Settings.CreateSettingInitializer("SettingsListSectionHeaderTemplate", data);
@@ -99,7 +93,6 @@ function AltinatorOptions:Initialize()
       L["OptionTooltip"],
       Settings.Default.False
    )
-	tooltipSetting:SetValueChangedCallback(OnRecipeTooltipSettingChanged)
 	Settings.CreateCheckbox(AltinatorOptionsCategory, tooltipSetting, L["OptionTooltipText"])
 
     local name = L["OptionsDeleteHeader"];
@@ -132,4 +125,8 @@ function AltinatorOptions:Initialize()
 	addonLayout:AddInitializer(deleteButtonInitializer)
 
    Settings.RegisterAddOnCategory(AltinatorOptionsCategory)
+end
+
+function AltinatorOptions:Initialize()
+      CreateOptionsCategory()
 end
