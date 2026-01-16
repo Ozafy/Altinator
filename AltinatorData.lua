@@ -81,17 +81,18 @@ function AltinatorData:SavePlayerDataLogin()
    data.XP.Needed=UnitXPMax("player")
    data.XP.Rested=GetXPExhaustion()
 
-   data.Professions= {}
-   data.ProfessionsSecondairy=data.ProfessionsSecondairy or {}
+   data.Professions = data.Professions or {}
+   data.ProfessionsSecondairy = data.ProfessionsSecondairy or {}
    local profNames_rev = tInvert(L["ProfessionIDs"])
    local skillsFound = 0
+   local knownProfs = {}
    for i = 1, GetNumSkillLines() do
     local name, _, _, skillRank, _, _, skillMaxRank = GetSkillLineInfo(i)
     if profNames_rev[name] then
       local profId=profNames_rev[name]
       skillsFound = skillsFound + 1
       if C["SecondairyProfession"][profId] then
-         data.ProfessionsSecondairy[profId]= data.ProfessionsSecondairy[profId] or {}
+         data.ProfessionsSecondairy[profId] = data.ProfessionsSecondairy[profId] or {}
          data.ProfessionsSecondairy[profId].Name=name
          data.ProfessionsSecondairy[profId].File=C["ProfessionIcons"][profNames_rev[name]]
          data.ProfessionsSecondairy[profId].Skill=skillRank
@@ -99,7 +100,8 @@ function AltinatorData:SavePlayerDataLogin()
          data.ProfessionsSecondairy[profId].Spells= data.ProfessionsSecondairy[profId].Spells or {}
          data.ProfessionsSecondairy[profId].Items= data.ProfessionsSecondairy[profId].Items or {}
       else
-         data.Professions[profId]= data.Professions[profId] or {}
+         table.insert(knownProfs, profId)
+         data.Professions[profId] = data.Professions[profId] or {}
          data.Professions[profId].Name=name
          data.Professions[profId].File=C["ProfessionIcons"][profNames_rev[name]]
          data.Professions[profId].Skill=skillRank
@@ -108,6 +110,13 @@ function AltinatorData:SavePlayerDataLogin()
          data.Professions[profId].Items= data.Professions[profId].Items or {}
       end
     end
+   end
+
+   -- in case a profession was unlearned, remove it from the data
+   for profId, _ in pairs(data.Professions) do
+      if not tContains(knownProfs, profId) then
+         data.Professions[profId] = nil
+      end
    end
 
    data.Mail = data.Mail or {}
