@@ -46,6 +46,11 @@ function AltinatorData:SavePlayerDataLogin()
    data.Sex = UnitSex("player")
    data.Level = UnitLevel("player")
    data.Faction = UnitFactionGroup("player")
+
+   local overall, equipped = GetAverageItemLevel()
+   data.ItemLevel = data.ItemLevel or {}
+   data.ItemLevel.Overall = overall
+   data.ItemLevel.Equipped = equipped
       
    data.Rank = data.Rank or {}
    data.Rank.Value = UnitPVPRank("player")

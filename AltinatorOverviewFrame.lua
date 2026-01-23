@@ -36,8 +36,12 @@ function AltinatorOverviewFrame:Initialize(self)
     self.LevelHeader:SetPoint("LEFT", self.MoneyHeader, "LEFT", 140, 0)
     self.LevelHeader:SetText(L["Level"])
 
+    self.ItemLevelHeader = self.ItemLevelHeader or self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+    self.ItemLevelHeader:SetPoint("LEFT", self.LevelHeader, "LEFT", 85, 0)
+    self.ItemLevelHeader:SetText(L["ItemLevel"])
+
     self.BagsHeader = self.BagsHeader or self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-    self.BagsHeader:SetPoint("LEFT", self.LevelHeader, "LEFT", 80, 0)
+    self.BagsHeader:SetPoint("LEFT", self.ItemLevelHeader, "LEFT", 80, 0)
     self.BagsHeader:SetText(L["Bags"])
 
     self.BankBagsHeader = self.BankBagsHeader or self:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
@@ -98,14 +102,33 @@ function AltinatorOverviewFrame:Initialize(self)
 
          scrollFrame.content.LevelTexts[i]:SetText(level)
 
+         scrollFrame.content.ItemLevelTexts = scrollFrame.content.ItemLevelTexts or {}
+         scrollFrame.content.ItemLevelTexts[i] = scrollFrame.content.ItemLevelTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+         scrollFrame.content.ItemLevelTexts[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 590, 0)
+         if char.ItemLevel then
+            local r, g, b, hex = C_Item.GetItemQualityColor(0)
+            if char.ItemLevel.Equipped >= 60 then
+               if char.ItemLevel.Equipped < 100 then
+                  local levelPerc = (char.ItemLevel.Equipped - 55)/25*100
+                  levelPerc = levelPerc/10*5
+                  r, g, b, hex = C_Item.GetItemQualityColor(math.floor(levelPerc/10))
+               else
+                  r, g, b, hex = C_Item.GetItemQualityColor(8)
+               end
+            end
+            scrollFrame.content.ItemLevelTexts[i]:SetTextColor(r, g, b)
+            scrollFrame.content.ItemLevelTexts[i]:SetText(("%.1f (%.1f)"):format(char.ItemLevel.Equipped or 0,char.ItemLevel.Overall or 0))
+         else
+            scrollFrame.content.ItemLevelTexts[i]:SetText(L["NoData"])
+         end
 
          scrollFrame.content.BagTexts = scrollFrame.content.BagTexts or {}
          scrollFrame.content.BagTexts[i] = scrollFrame.content.BagTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-         scrollFrame.content.BagTexts[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 585, 0)
+         scrollFrame.content.BagTexts[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 670, 0)
 
          scrollFrame.content.BankBagTexts = scrollFrame.content.BankBagTexts or {}
          scrollFrame.content.BankBagTexts[i] = scrollFrame.content.BankBagTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-         scrollFrame.content.BankBagTexts[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 700, 0)
+         scrollFrame.content.BankBagTexts[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 785, 0)
         if char.Containers then
             
             local bags = {}
