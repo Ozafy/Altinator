@@ -56,7 +56,7 @@ local function CreateCharacterLearnTooltipLines(charsCouldLearn, profId, require
          local cr, cg, cb, web = GetClassColor(char.Class.File)
          local prof = AltinatorNS.AltinatorData:GetCharacterProfession(char, profId)
          --print("prof for " .. char.Name .. ": " .. (prof and prof.Name or "nil") .. ", skill: " .. (prof and prof.Skill or "nil") .. ", requiredSkill: " .. (requiredSkill or "nil"))
-         if prof and prof.Skill > requiredSkill then
+         if prof and prof.Skill >= requiredSkill then
             table.insert(learnedBy, "\124c" .. web .. char.Name .. "\124r (" .. prof.Skill .. ")")
          else
             table.insert(learnedBy, "\124c" .. web .. char.Name .. "\124r (\124cnIMPOSSIBLE_DIFFICULTY_COLOR:" .. prof.Skill .. "\124r)")
