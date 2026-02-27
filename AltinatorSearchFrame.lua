@@ -50,7 +50,7 @@ local function SearchResult(result)
     table.sort(result, Compare)
     for i, item in pairs(result) do
         local char = AltinatorDB.global.characters[item["source"]["character"]]
-        if char and char.Realm==AltinatorNS.AltinatorAddon.CurrentCharacter.Realm then
+        if char and not AltinatorDB.global.hiddenCharacters[item["source"]["character"]] and char.Realm==AltinatorNS.AltinatorAddon.CurrentCharacter.Realm then
             --local itemName, _, _, _, _, _, _, _, _, itemTexture = GetItemInfo(item["itemID"])
             frame.Frames[totalResults] = frame.Frames[totalResults] or CreateFrame("BUTTON", nil, frame)
             frame.Frames[totalResults].Frames = frame.Frames[totalResults].Frames or {}

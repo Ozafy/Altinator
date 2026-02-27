@@ -5,15 +5,15 @@ local L = LibStub("AceLocale-3.0"):GetLocale(AddonName)
 
 local Altinatoricon = LibStub("LibDBIcon-1.0")
 local AltinatorOptionsCategory, AltinatorOptionsLayout = Settings.RegisterVerticalLayoutCategory(AddonName)
---local AltinatorCharacterOptionsCategory, AltinatorCharacterOptionsLayout = Settings.RegisterVerticalLayoutSubcategory(AltinatorOptionsCategory, AddonName)
+local AltinatorHideCharacterCategory, AltinatorHideCharacterLayout = Settings.RegisterVerticalLayoutSubcategory(AltinatorOptionsCategory, L["OptionHideCharacter"])
 
 
 local AltinatorOptions = {}
 AltinatorNS.AltinatorOptions = AltinatorOptions
 AltinatorNS.AltinatorOptions.Category = AltinatorOptionsCategory
 AltinatorNS.AltinatorOptions.Layout = AltinatorOptionsLayout
---AltinatorNS.AltinatorOptions.CharacterCategory = AltinatorCharacterOptionsCategory
---AltinatorNS.AltinatorOptions.CharacterLayout = AltinatorCharacterOptionsLayout
+AltinatorNS.AltinatorOptions.HideCharacterCategory = AltinatorHideCharacterCategory
+AltinatorNS.AltinatorOptions.HideCharacterLayout = AltinatorHideCharacterLayout
 
 local function OnMinimapSettingChanged(setting, value)
    if value then
@@ -39,6 +39,12 @@ local function GetAllCharactersSortedByRealm()
          table.insert(characterNames, char.Realm .. "-" .. char.Name)
    end
    table.sort(characterNames)
+
+   return characterNames
+end
+
+local function GetAllCharactersSortedByRealmContainer()
+   local characterNames = GetAllCharactersSortedByRealm()
 
    local container = Settings.CreateControlTextContainer()
    container:Add("", L["OptionSelectCharacter"])
@@ -109,7 +115,7 @@ function CreateOptionsCategory()
 		GetCharacterToDelete,
 		SetCharacterToDelete
 	)
-	Settings.CreateDropdown(AltinatorOptionsCategory, deleteCharacterSetting, GetAllCharactersSortedByRealm)
+	Settings.CreateDropdown(AltinatorOptionsCategory, deleteCharacterSetting, GetAllCharactersSortedByRealmContainer)
 
 	local deleteButtonInitializer = CreateSettingsButtonInitializer(
 		L["OptionDeleteSelected"], -- name
@@ -127,6 +133,26 @@ function CreateOptionsCategory()
    Settings.RegisterAddOnCategory(AltinatorOptionsCategory)
 end
 
+function CreateHideCharacterCategory()
+   local characters = GetAllCharactersSortedByRealm();
+   for i, name in ipairs(characters) do
+      local realm, name = strsplit("-", name, 2)
+      local char = name .. "-" .. realm
+      local hideCharacterSetting = Settings.RegisterAddOnSetting(
+         AltinatorHideCharacterCategory,
+         "Altinator_Character_To_Hide" .. i,
+         char,
+         AltinatorNS.AltinatorDB.global.hiddenCharacters,
+         Settings.VarType.Boolean,
+         char,
+         Settings.Default.False
+      )
+      Settings.CreateCheckbox(AltinatorHideCharacterCategory, hideCharacterSetting, L["OptionHideCharacterTooltipText"])
+   end
+   Settings.RegisterAddOnCategory(AltinatorHideCharacterCategory)
+end
+
 function AltinatorOptions:Initialize()
       CreateOptionsCategory()
+      CreateHideCharacterCategory()
 end

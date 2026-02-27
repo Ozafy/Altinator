@@ -36,13 +36,15 @@ function AltinatorAddon:OnInitialize()
          }
 		},
       global = {
-         characters = {}
+         characters = {},
+         hiddenCharacters = {}
       }
 	})
    AltinatorNS.AltinatorDB = AltinatorDB
 	icon:Register(AddonName, AltinatorLDB, AltinatorDB.profile.minimap)
    if AltinatorDB.global.dbversion ~= C["MajorDBVersion"] then
       AltinatorDB.global.characters = {}
+      AltinatorDB.global.hiddenCharacters = {}
       AltinatorDB.global.dbversion = C["MajorDBVersion"]
    end
    AltinatorAddon.CurrentCharacter = {}
