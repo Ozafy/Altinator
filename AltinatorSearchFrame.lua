@@ -50,58 +50,58 @@ local function SearchResult(result)
     table.sort(result, Compare)
     for i, item in pairs(result) do
         local char = AltinatorDB.global.characters[item["source"]["character"]]
-        if char then
+        if char and char.Realm==AltinatorNS.AltinatorAddon.CurrentCharacter.Realm then
             --local itemName, _, _, _, _, _, _, _, _, itemTexture = GetItemInfo(item["itemID"])
-            frame.Frames[i] = frame.Frames[i] or CreateFrame("BUTTON", nil, frame)
-            frame.Frames[i].Frames = frame.Frames[i].Frames or {}
-            frame.Frames[i]:Show()
-            frame.Frames[i]:SetSize(ICON_SIZE, ICON_SIZE)
-            frame.Frames[i]:SetPoint("TOPLEFT", 5, (_HEIGHT * -1 * (i-1)))
-            AltinatorNS:CreateInnerBorder(frame.Frames[i], item["quality"])
-            frame.Frames[i].Frames["texture"] = frame.Frames[i].Frames["texture"] or frame.Frames[i]:CreateTexture(nil, "BACKGROUND")
-            frame.Frames[i].Frames["texture"]:SetSize(ICON_SIZE, ICON_SIZE)
-            frame.Frames[i].Frames["texture"]:SetPoint("CENTER")
+            frame.Frames[totalResults] = frame.Frames[totalResults] or CreateFrame("BUTTON", nil, frame)
+            frame.Frames[totalResults].Frames = frame.Frames[totalResults].Frames or {}
+            frame.Frames[totalResults]:Show()
+            frame.Frames[totalResults]:SetSize(ICON_SIZE, ICON_SIZE)
+            frame.Frames[totalResults]:SetPoint("TOPLEFT", 5, (_HEIGHT * -1 * (totalResults)))
+            AltinatorNS:CreateInnerBorder(frame.Frames[totalResults], item["quality"])
+            frame.Frames[totalResults].Frames["texture"] = frame.Frames[totalResults].Frames["texture"] or frame.Frames[totalResults]:CreateTexture(nil, "BACKGROUND")
+            frame.Frames[totalResults].Frames["texture"]:SetSize(ICON_SIZE, ICON_SIZE)
+            frame.Frames[totalResults].Frames["texture"]:SetPoint("CENTER")
             if item["itemTexture"] then
-                frame.Frames[i].Frames["texture"]:SetTexture(item["itemTexture"])
+                frame.Frames[totalResults].Frames["texture"]:SetTexture(item["itemTexture"])
             else
-                frame.Frames[i].Frames["texture"]:SetTexture(136235)
+                frame.Frames[totalResults].Frames["texture"]:SetTexture(136235)
             end
 
-            frame.Frames[i].TooltipItemLink = item["itemLink"]
-            frame.Frames[i]:RegisterForClicks("AnyUp")
-            frame.Frames[i]:SetScript("OnClick", function(self, button, down)
+            frame.Frames[totalResults].TooltipItemLink = item["itemLink"]
+            frame.Frames[totalResults]:RegisterForClicks("AnyUp")
+            frame.Frames[totalResults]:SetScript("OnClick", function(self, button, down)
                 AltinatorNS:ItemOnClick(self)
             end)
-            frame.Frames[i]:SetScript("OnEnter", function(self)
+            frame.Frames[totalResults]:SetScript("OnEnter", function(self)
                 AltinatorNS:ItemOnEnter(self)
             end)
-                frame.Frames[i]:SetScript("OnLeave", function(self)
+                frame.Frames[totalResults]:SetScript("OnLeave", function(self)
                 AltinatorNS:ItemOnLeave(self)
             end)
 
-            frame.Frames[i].Frames["itemNameString"] = frame.Frames[i].Frames["itemNameString"] or frame.Frames[i]:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-            frame.Frames[i].Frames["itemNameString"]:SetPoint("LEFT", frame.Frames[i].Frames["texture"], "LEFT", ICON_SIZE + 10, 0)
+            frame.Frames[totalResults].Frames["itemNameString"] = frame.Frames[totalResults].Frames["itemNameString"] or frame.Frames[totalResults]:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+            frame.Frames[totalResults].Frames["itemNameString"]:SetPoint("LEFT", frame.Frames[totalResults].Frames["texture"], "LEFT", ICON_SIZE + 10, 0)
             local r, g, b, _ = C_Item.GetItemQualityColor(item["quality"])
-            frame.Frames[i].Frames["itemNameString"]:SetText(item["itemName"])
-            frame.Frames[i].Frames["itemNameString"]:SetTextColor(r, g, b)
+            frame.Frames[totalResults].Frames["itemNameString"]:SetText(item["itemName"])
+            frame.Frames[totalResults].Frames["itemNameString"]:SetTextColor(r, g, b)
 
-            frame.Frames[i].Frames["charName"] = frame.Frames[i].Frames["charName"] or frame.Frames[i]:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-            frame.Frames[i].Frames["charName"]:SetPoint("LEFT", frame.Frames[i].Frames["texture"], "LEFT", ICON_SIZE + 300, 0)
-            frame.Frames[i].Frames["charName"]:SetText(char.Name)
+            frame.Frames[totalResults].Frames["charName"] = frame.Frames[totalResults].Frames["charName"] or frame.Frames[totalResults]:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+            frame.Frames[totalResults].Frames["charName"]:SetPoint("LEFT", frame.Frames[totalResults].Frames["texture"], "LEFT", ICON_SIZE + 300, 0)
+            frame.Frames[totalResults].Frames["charName"]:SetText(char.Name)
             local r, g, b, _ = GetClassColor(char.Class.File)
-            frame.Frames[i].Frames["charName"]:SetTextColor(r, g, b)
+            frame.Frames[totalResults].Frames["charName"]:SetTextColor(r, g, b)
 
-            frame.Frames[i].Frames["itemLocationString"] = frame.Frames[i].Frames["itemLocationString"] or frame.Frames[i]:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-            frame.Frames[i].Frames["itemLocationString"]:SetPoint("LEFT", frame.Frames[i].Frames["texture"], "LEFT", ICON_SIZE + 450, 0)
-            frame.Frames[i].Frames["itemLocationString"]:SetText(item["source"]["container"])
+            frame.Frames[totalResults].Frames["itemLocationString"] = frame.Frames[totalResults].Frames["itemLocationString"] or frame.Frames[totalResults]:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+            frame.Frames[totalResults].Frames["itemLocationString"]:SetPoint("LEFT", frame.Frames[totalResults].Frames["texture"], "LEFT", ICON_SIZE + 450, 0)
+            frame.Frames[totalResults].Frames["itemLocationString"]:SetText(item["source"]["container"])
 
-            frame.Frames[i].Frames["itemCountString"] = frame.Frames[i].Frames["itemCountString"] or frame.Frames[i]:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-            frame.Frames[i].Frames["itemCountString"]:SetPoint("LEFT", frame.Frames[i].Frames["texture"], "LEFT", ICON_SIZE + 550, 0)
-            frame.Frames[i].Frames["itemCountString"]:SetText(item["itemCount"])
+            frame.Frames[totalResults].Frames["itemCountString"] = frame.Frames[totalResults].Frames["itemCountString"] or frame.Frames[totalResults]:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+            frame.Frames[totalResults].Frames["itemCountString"]:SetPoint("LEFT", frame.Frames[totalResults].Frames["texture"], "LEFT", ICON_SIZE + 550, 0)
+            frame.Frames[totalResults].Frames["itemCountString"]:SetText(item["itemCount"])
 
-            frame.Frames[i].Frames["itemTotalCountString"] = frame.Frames[i].Frames["itemTotalCountString"] or frame.Frames[i]:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-            frame.Frames[i].Frames["itemTotalCountString"]:SetPoint("LEFT", frame.Frames[i].Frames["texture"], "LEFT", ICON_SIZE + 650, 0)
-            frame.Frames[i].Frames["itemTotalCountString"]:SetText(itemTotals[item["itemID"]])
+            frame.Frames[totalResults].Frames["itemTotalCountString"] = frame.Frames[totalResults].Frames["itemTotalCountString"] or frame.Frames[totalResults]:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+            frame.Frames[totalResults].Frames["itemTotalCountString"]:SetPoint("LEFT", frame.Frames[totalResults].Frames["texture"], "LEFT", ICON_SIZE + 650, 0)
+            frame.Frames[totalResults].Frames["itemTotalCountString"]:SetText(itemTotals[item["itemID"]])
 
             totalResults = totalResults + 1
         end
