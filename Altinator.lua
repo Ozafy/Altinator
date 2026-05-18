@@ -61,6 +61,10 @@ function AltinatorAddon:OnInitialize()
    self:RegisterEvent("TRADE_SKILL_UPDATE")
    self:RegisterEvent("CRAFT_UPDATE")
    self:RegisterEvent("BANKFRAME_OPENED")
+   self:RegisterEvent("UNIT_SPELLCAST_START")
+   self:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
+   self:RegisterEvent("UNIT_SPELLCAST_STOP")
+   self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
    AltinatorNS.AltinatorOptions:Initialize()
    RequestTimePlayed()
    AltinatorNS.AltinatorGameTooltip:Initialize()
@@ -83,6 +87,10 @@ function AltinatorAddon:OnDisable()
    self:UnregisterEvent("TRADE_SKILL_UPDATE")
    self:UnregisterEvent("CRAFT_UPDATE")
    self:UnregisterEvent("BANKFRAME_OPENED")
+   self:UnregisterEvent("UNIT_SPELLCAST_START")
+   self:UnregisterEvent("UNIT_SPELLCAST_INTERRUPTED")
+   self:UnregisterEvent("UNIT_SPELLCAST_STOP")
+   self:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
 end
 
 function AltinatorAddon:PLAYER_ENTERING_WORLD(self, isLogin, isReload)
@@ -151,6 +159,22 @@ end
 
 function AltinatorAddon:BANKFRAME_OPENED()
    AltinatorAddon:ScheduleTimer(AltinatorNS.AltinatorData.ScanBank, 0.5)	
+end
+
+function AltinatorAddon:UNIT_SPELLCAST_START(event, unit, castGUID, spellId)
+   AltinatorNS.AltinatorData:SpellCastStart(unit, spellId)
+end
+
+function AltinatorAddon:UNIT_SPELLCAST_INTERRUPTED(event, unit, castGUID, spellId)
+   AltinatorNS.AltinatorData:SpellCastStop(unit, spellId)
+end
+
+function AltinatorAddon:UNIT_SPELLCAST_STOP(event, unit, castGUID, spellId)
+   AltinatorNS.AltinatorData:SpellCastStop(unit, spellId)
+end
+
+function AltinatorAddon:UNIT_SPELLCAST_SUCCEEDED(event, unit, castGUID, spellId)
+   AltinatorNS.AltinatorData:SpellCastSucceeded(unit, spellId)
 end
 
 function AltinatorAddon:GetMainFrame()

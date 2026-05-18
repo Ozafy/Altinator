@@ -461,3 +461,55 @@ function AltinatorData:GetProfessionCooldowns(profession)
    end
    return cooldowns
 end
+
+local tempWorldBuffs = {}
+local storeBuffTimer;
+local function GetPlayerWorldBuffs()
+   local worldbuffs = { };
+   local i = 1;
+   local name, icon, _, _, _, expirationTime, _, _, _, spellId = UnitBuff("player", i);
+   while name do
+      if spellId and C["WorldBuffs"][spellId] then
+         worldbuffs[#worldbuffs + 1] = {
+            Name = L["WorldBuffs"][spellId].name,
+            Icon = icon,
+            ExpirationTime = expirationTime - GetTime(),
+            SpellId = spellId
+         };
+      end
+      i = i + 1;
+      name, icon, _, _, _, expirationTime, _, _, _, spellId = UnitBuff("player", i);
+   end;
+   tempWorldBuffs = worldbuffs
+end
+
+function AltinatorData:SpellCastStart(unit, spellId)
+   if unit=="player" and spellId == 349858 then
+      GetPlayerWorldBuffs()
+      storeBuffTimer = C_Timer.NewTicker(1, function()
+         GetPlayerWorldBuffs();
+      end, 4)
+   end
+end
+
+function AltinatorData:SpellCastStop(unit, spellId)
+   if unit=="player" and spellId == 349858 then
+      tempWorldBuffs = {}
+      if storeBuffTimer then  
+         storeBuffTimer:Cancel()
+         storeBuffTimer = nil
+      end
+   end
+end
+
+function AltinatorData:SpellCastSucceeded(unit, spellId)
+   print("SpellCastSucceeded, unit: " .. (unit or "nil") .. ", spellId: " .. (spellId or "nil"))
+   if unit=="player" then
+      if spellId == 349858 then
+         AltinatorNS.AltinatorAddon.CurrentCharacter.WorldBuffs = tempWorldBuffs
+      end
+      if spellId == 349863 then
+         AltinatorNS.AltinatorAddon.CurrentCharacter.WorldBuffs = {}
+      end
+   end
+end

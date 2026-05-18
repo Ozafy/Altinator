@@ -38,6 +38,8 @@ L["SecondsShort"] = "s"
 L["Honour"] = "Honour"
 L["Kills"] = "kills"
 L["HonourNotEnoughKills"] = "Not enough kills"
+L["No"] = "No"
+L["Yes"] = "Yes"
 L["Professions"] = "Professions"
 L["ProfessionIDs"]= {
     [129] = "First Aid",
@@ -117,3 +119,60 @@ L["OptionDelete"] = "Delete character"
 L["OptionDeleteTooltip"] = "Delete the character selected in the dropdown above from Altinator's database."
 L["OptionHideCharacter"] = "Hide characters"
 L["OptionHideCharacterTooltipText"] = "Hide characters from the character list"
+L["BoonedBuffs"] = "Booned Buffs"
+L["WorldBuffs"] = {
+	[16609] = {
+		name = "Warchief's Blessing",
+	},
+	[22888] = {
+		name = "Rallying Cry of the Dragonslayer",
+	},
+	[24425] = {
+		name = "Spirit of Zandalar",
+	},
+    [355366] = {
+		name = "Warchief's Blessing",
+	},
+	[355363] = {
+		name = "Rallying Cry of the Dragonslayer",
+	},
+	[355365] = {
+		name = "Spirit of Zandalar",
+	},
+	[22818] = {
+		name = "Mol'dar's Moxie",
+	},
+	[22817] = {
+		name = "Fengus' Ferocity",
+	},
+	[22820] = {
+		name = "Slip'kik's Savvy",
+	},
+	[15366] = {
+		name = "Songflower Serenade",
+	},
+	[23736] = {
+		name = "Sayge's Dark Fortune of Agility",
+	},
+	[23766] = {
+		name = "Sayge's Dark Fortune of Intelligence",
+	},
+	[23738] = {
+		name = "Sayge's Dark Fortune of Spirit",
+	},
+	[23737] = {
+    	name = "Sayge's Dark Fortune of Stamina",
+	},
+	[23735] = {
+		name = "Sayge's Dark Fortune of Strength",
+	},
+	[23767] = {
+		name = "Sayge's Dark Fortune of Armor",
+	},
+	[23769] = {
+		name = "Sayge's Dark Fortune of Resistance",
+	},
+	[23768] = {
+		name = "Sayge's Dark Fortune of Damage",
+	}
+}

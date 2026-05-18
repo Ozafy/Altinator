@@ -196,3 +196,59 @@ C["Attunements"] = {
 		iconTexture = "Interface\\Icons\\spell_holy_senseundead"
 	},
 }
+C["WorldBuffs"] = {
+	[16609] = {
+		type = "rend",
+	},
+	[22888] = {
+		type = "dragonslayer",
+	},
+	[24425] = {
+		type = "zandalar",
+	},
+	[355366] = {
+		type = "rend",
+	},
+	[355363] = {
+		type = "dragonslayer",
+	},
+	[355365] = {
+		type = "zandalar",
+	},
+	[22818] = {
+		type = "dmt_moxie",
+	},
+	[22817] = {
+		type = "dmt_ferocity",
+	},
+	[22820] = {
+		type = "dmt_savvy",
+	},
+	[15366] = {
+		type = "songflower",
+	},
+	[23736] = {
+		type = "dmf_agility",
+	},
+	[23766] = {
+		type = "dmf_intelligence",
+	},
+	[23738] = {
+		type = "dmf_spirit",
+	},
+	[23737] = {
+		type = "dmf_stamina",
+	},
+	[23735] = {
+		type = "dmf_strength",
+	},
+	[23767] = {
+		type = "dmf_armor",
+	},
+	[23769] = {
+		type = "dmf_resistance",
+	},
+	[23768] = {
+		type = "dmf_damage",
+	}
+}
