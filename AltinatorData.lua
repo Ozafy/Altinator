@@ -503,7 +503,6 @@ function AltinatorData:SpellCastStop(unit, spellId)
 end
 
 function AltinatorData:SpellCastSucceeded(unit, spellId)
-   print("SpellCastSucceeded, unit: " .. (unit or "nil") .. ", spellId: " .. (spellId or "nil"))
    if unit=="player" then
       if spellId == 349858 then
          AltinatorNS.AltinatorAddon.CurrentCharacter.WorldBuffs = tempWorldBuffs
