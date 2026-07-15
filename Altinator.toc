@@ -1,6 +1,6 @@
-## Interface: 11508
+## Interface: 11509
 ## Title: Altinator
-## Version: 1.0
+## Version: 2.12
 ## Author: Ozafy
 ## Notes: Shows alt things using Syndicator
 ## DefaultState: Enabled
