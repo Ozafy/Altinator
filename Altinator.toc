@@ -2,6 +2,7 @@
 ## Title: Altinator
 ## Version: 2.12
 ## Author: Ozafy
+## IconTexture: Interface/Icons/inv_scroll_03
 ## Notes: Shows alt things using Syndicator
 ## DefaultState: Enabled
 ## SavedVariables: AltinatorDB
