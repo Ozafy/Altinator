@@ -5,6 +5,17 @@
 ## Notes: Shows alt things using Syndicator
 ## DefaultState: Enabled
 ## SavedVariables: AltinatorDB
+## Category: Other
+## Category-deDE: Anderes
+## Category-esES: Otros
+## Category-esMX: Otros
+## Category-frFR: Autre
+## Category-itIT: Altro
+## Category-koKR: 기타
+## Category-ptBR: Outro
+## Category-ruRU: Другое
+## Category-zhCN: 其它
+## Category-zhTW: 其他
 Libs\Libs.xml
 Locales\Locales.xml
 AltinatorConstants.lua
