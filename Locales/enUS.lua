@@ -83,6 +83,7 @@ L["EquipmentSlots"]= {
 }
 L["SearchLabel"] = "Search:"
 L["SearchButton"] = "Search"
+L["IncludeHiddenChars"] = "Include Hidden Characters"
 L["SearchItemName"] = "Item Name"
 L["SearchItemCharacter"] = "Character"
 L["SearchItemLocation"] = "Location"

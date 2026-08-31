@@ -17,7 +17,7 @@ end
 
 
 local function SearchResult(result)
-    local frame = AltinatorNS.AltinatorSearchFrame
+    local frame = AltinatorNS.AltinatorSearchResultFrame
     frame.Frames = frame.Frames or {}
     local totalResults = 0
 
@@ -50,7 +50,7 @@ local function SearchResult(result)
     table.sort(result, Compare)
     for i, item in pairs(result) do
         local char = AltinatorDB.global.characters[item["source"]["character"]]
-        if char and not AltinatorDB.global.hiddenCharacters[item["source"]["character"]] and char.Realm==AltinatorNS.AltinatorAddon.CurrentCharacter.Realm then
+        if char and (AltinatorIncludeHiddenCharsCheckbox:GetChecked() or not AltinatorDB.global.hiddenCharacters[item["source"]["character"]]) and char.Realm==AltinatorNS.AltinatorAddon.CurrentCharacter.Realm then
             --local itemName, _, _, _, _, _, _, _, _, itemTexture = GetItemInfo(item["itemID"])
             frame.Frames[totalResults] = frame.Frames[totalResults] or CreateFrame("BUTTON", nil, frame)
             frame.Frames[totalResults].Frames = frame.Frames[totalResults].Frames or {}
@@ -110,6 +110,9 @@ local function SearchResult(result)
 end
 
 local function SearchItems(searchTerm)
+    if searchTerm == nil or searchTerm == "" then
+        return
+    end
     searchTerm = string.lower(searchTerm)
     Syndicator.Search.RequestSearchEverywhereResults(searchTerm, SearchResult)
 end
@@ -145,6 +148,11 @@ function AltinatorSearchFrame:Initialize(self)
             self.SearchBox:ClearFocus()
         end)
 
+        self.IncludeHiddenCharsCheckbox = self.IncludeHiddenCharsCheckbox or CreateFrame("CheckButton", "AltinatorIncludeHiddenCharsCheckbox", self, "UICheckButtonTemplate");
+        self.IncludeHiddenCharsCheckbox:SetPoint("LEFT", self.SearchButton, "RIGHT", 10, 0)
+        -- set text on the item doesn't work vOv
+        AltinatorIncludeHiddenCharsCheckboxText:SetText(L["IncludeHiddenChars"]);
+
         self.ItemHeader = self.ItemHeader or self:CreateFontString("HeaderName", "ARTWORK", "GameFontHighlight")
         self.ItemHeader:SetPoint("TOPLEFT", 5, -2 * _HEIGHT)
         self.ItemHeader:SetText(L["SearchItemName"])
@@ -166,7 +174,7 @@ function AltinatorSearchFrame:Initialize(self)
         self.TotalOwnedHeader:SetText(L["SearchItemTotalOwned"])
 
         local scrollFrame = self.ScrollFrame or AltinatorNS:CreateScrollFrame(self, nil, _HEIGHT * -3, nil, nil)
-        AltinatorNS.AltinatorSearchFrame = scrollFrame.content
+        AltinatorNS.AltinatorSearchResultFrame = scrollFrame.content
 
         self:SetSize(C["Width"] - 42, C["Height"] - 50)
     else
