@@ -73,6 +73,9 @@ function AltinatorData:SavePlayerDataLogin()
    local raceName, raceFile, raceID = UnitRace("player")
    data.Race= data.Race or {}
    data.Race.Name=raceName
+   if raceFile == "Scourge" then
+      raceFile = "Undead"
+   end
    data.Race.File=raceFile
    data.Race.Id=raceID
 
