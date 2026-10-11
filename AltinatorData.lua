@@ -259,7 +259,7 @@ end
 function AltinatorData:SavePlayerDataLogout()
    local data = AltinatorNS.AltinatorAddon.CurrentCharacter
    data.LastLogout = time()
-   data.Resting = IsResting()
+   -- IsResting() isn't reliable during logout, keep the last value seen while playing
    AltinatorData:SavePlayerLocation()
    -- /played is only requested on load, add the time played since then
    if data.TimePlayed and data.TimePlayed.Received then

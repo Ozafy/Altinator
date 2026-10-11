@@ -153,6 +153,8 @@ function AltinatorAddon:PLAYER_ENTERING_WORLD(self, isLogin, isReload)
    if isLogin then
       AltinatorAddon:ScheduleTimer(AltinatorNS.AltinatorData.NotifyExpiredCooldowns, 5)
    end
+   -- IsResting() can still be false right after loading in, check again once the world is settled
+   ScheduleOnce("resting", AltinatorNS.AltinatorData.SavePlayerResting, 3)
 end
 
 function AltinatorAddon:PLAYER_LOGOUT()
@@ -187,10 +189,12 @@ end
 
 function AltinatorAddon:ZONE_CHANGED()
    ScheduleOnce("location", AltinatorNS.AltinatorData.SavePlayerLocation, 0.5)
+   ScheduleOnce("resting", AltinatorNS.AltinatorData.SavePlayerResting, 0.5)
 end
 
 function AltinatorAddon:ZONE_CHANGED_INDOORS()
    ScheduleOnce("location", AltinatorNS.AltinatorData.SavePlayerLocation, 0.5)
+   ScheduleOnce("resting", AltinatorNS.AltinatorData.SavePlayerResting, 0.5)
 end
 
 function AltinatorAddon:ZONE_CHANGED_NEW_AREA()
