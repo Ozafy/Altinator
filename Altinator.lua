@@ -148,6 +148,9 @@ function AltinatorAddon:PLAYER_ENTERING_WORLD(self, isLogin, isReload)
    if isLogin or isReload then
       AltinatorNS.AltinatorData:SavePlayerDataLogin()
    end
+   if isLogin then
+      AltinatorAddon:ScheduleTimer(AltinatorNS.AltinatorData.NotifyExpiredCooldowns, 5)
+   end
 end
 
 function AltinatorAddon:PLAYER_LOGOUT()

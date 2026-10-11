@@ -60,6 +60,7 @@ L["ProfessionIDs"]= {
 L["ProfessionCooldown"] = "Cooldown"
 L["ProfessionCooldowns"] = "Cooldowns"
 L["ProfessionNoCooldowns"] = "Everything is off cooldown"
+L["ProfessionCooldownExpired"] = "%s's %s is off cooldown"
 L["Syndicator_Not_Ready"] = "Syndicator needs to be installed and enabled"
 L["GearTitle"] = "Gear slots"
 L["EquipmentSlots"]= {

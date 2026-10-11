@@ -487,7 +487,9 @@ function AltinatorData:SaveProfessionItemCooldowns()
                if start and start > 0 and duration > 1.5 then
                   cooldown.Cooldown = duration
                   cooldown.CooldownEndTime = time() + (start + duration - GetTime())
-               else
+                  cooldown.ExpiredNotified = nil
+               elseif cooldown.CooldownEndTime and cooldown.CooldownEndTime > time() then
+                  -- only clear a cooldown that ended early, an expired one is kept for the login warning
                   cooldown.Cooldown = 0
                   cooldown.CooldownEndTime = 0
                end
@@ -507,6 +509,32 @@ local function AddActiveCooldowns(cooldowns, items)
                Cooldown = itemData.Cooldown,
                CooldownEndTime = itemData.CooldownEndTime
             })
+         end
+      end
+   end
+end
+
+local function NotifyExpired(char, items)
+   if items then
+      for _, itemData in pairs(items) do
+         if itemData.Cooldown and itemData.Cooldown>0 and itemData.CooldownEndTime and itemData.CooldownEndTime>0
+            and itemData.CooldownEndTime<=time() and not itemData.ExpiredNotified then
+            local _, _, _, classColor = GetClassColor(char.Class.File)
+            print("\124cffff8000" .. AddonName .. ":\124r " .. string.format(L["ProfessionCooldownExpired"], "\124c" .. classColor .. char.Name .. "\124r", "\124cnYELLOW_FONT_COLOR:" .. (itemData.Name or "?") .. "\124r"))
+            itemData.ExpiredNotified = true
+         end
+      end
+   end
+end
+
+-- warns once about every profession cooldown that expired since the last warning
+function AltinatorData:NotifyExpiredCooldowns()
+   for _, name in ipairs(AltinatorNS:GetRealmCharactersSorted()) do
+      local char = AltinatorNS.AltinatorDB.global.characters[name]
+      for _, professions in ipairs({ char.Professions or {}, char.ProfessionsSecondairy or {} }) do
+         for _, profession in pairs(professions) do
+            NotifyExpired(char, profession.Items)
+            NotifyExpired(char, profession.ItemCooldowns)
          end
       end
    end
