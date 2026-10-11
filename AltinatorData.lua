@@ -79,8 +79,10 @@ function AltinatorData:SavePlayerDataLogin()
    data.XP.Needed=UnitXPMax("player")
    data.XP.Rested=GetXPExhaustion()
    data.Resting = IsResting()
+   AltinatorData:SavePlayerLocation()
 
    AltinatorData:SavePlayerProfessions()
+   AltinatorData:SaveProfessionItemCooldowns()
 
    data.Mail = data.Mail or {}
    for i=#data.Mail,1,-1 do
@@ -256,6 +258,8 @@ end
 function AltinatorData:SavePlayerDataLogout()
    local data = AltinatorNS.AltinatorAddon.CurrentCharacter
    data.LastLogout = time()
+   data.Resting = IsResting()
+   AltinatorData:SavePlayerLocation()
    -- /played is only requested on load, add the time played since then
    if data.TimePlayed and data.TimePlayed.Received then
       local elapsed = time() - data.TimePlayed.Received
@@ -292,6 +296,13 @@ end
 function AltinatorData:SavePlayerResting()
    local data = AltinatorNS.AltinatorAddon.CurrentCharacter
    data.Resting = IsResting()
+end
+
+function AltinatorData:SavePlayerLocation()
+   local data = AltinatorNS.AltinatorAddon.CurrentCharacter
+   data.Location = data.Location or {}
+   data.Location.Zone = GetRealZoneText()
+   data.Location.SubZone = GetSubZoneText()
 end
 
 function AltinatorData:SavePlayerGuild()
@@ -456,10 +467,40 @@ hooksecurefunc("ReturnInboxItem", function(index, ...)
    end
 end)
 
-function AltinatorData:GetProfessionCooldowns(profession)
-   local cooldowns = {}
-   if profession.Items then
-      for itemId, itemData in pairs(profession.Items) do
+local GetItemCount = C_Item.GetItemCount or GetItemCount
+local GetItemCooldown = C_Container.GetItemCooldown or GetItemCooldown
+local GetItemInfo = C_Item.GetItemInfo or GetItemInfo
+
+function AltinatorData:SaveProfessionItemCooldowns()
+   local data = AltinatorNS.AltinatorAddon.CurrentCharacter
+   for profId, items in pairs(C["ProfessionCooldownItems"]) do
+      local prof = AltinatorData:GetCharacterProfession(data, profId)
+      if prof then
+         prof.ItemCooldowns = prof.ItemCooldowns or {}
+         for _, itemId in ipairs(items) do
+            -- the cooldown can only be read while the item is in the bags or equipped
+            if GetItemCount(itemId) > 0 then
+               local start, duration = GetItemCooldown(itemId)
+               local cooldown = prof.ItemCooldowns[itemId] or {}
+               cooldown.Name = GetItemInfo(itemId) or cooldown.Name
+               -- ignore the global cooldown
+               if start and start > 0 and duration > 1.5 then
+                  cooldown.Cooldown = duration
+                  cooldown.CooldownEndTime = time() + (start + duration - GetTime())
+               else
+                  cooldown.Cooldown = 0
+                  cooldown.CooldownEndTime = 0
+               end
+               prof.ItemCooldowns[itemId] = cooldown
+            end
+         end
+      end
+   end
+end
+
+local function AddActiveCooldowns(cooldowns, items)
+   if items then
+      for itemId, itemData in pairs(items) do
          if itemData.Cooldown and itemData.Cooldown>0 and itemData.CooldownEndTime and itemData.CooldownEndTime>time() then
             table.insert(cooldowns, {
                Name = itemData.Name,
@@ -469,6 +510,12 @@ function AltinatorData:GetProfessionCooldowns(profession)
          end
       end
    end
+end
+
+function AltinatorData:GetProfessionCooldowns(profession)
+   local cooldowns = {}
+   AddActiveCooldowns(cooldowns, profession.Items)
+   AddActiveCooldowns(cooldowns, profession.ItemCooldowns)
    return cooldowns
 end
 

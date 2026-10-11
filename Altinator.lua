@@ -82,6 +82,9 @@ function AltinatorAddon:OnInitialize()
    self:RegisterEvent("PLAYER_LEVEL_UP")
    self:RegisterEvent("PLAYER_XP_UPDATE")
    self:RegisterEvent("PLAYER_UPDATE_RESTING")
+   self:RegisterEvent("ZONE_CHANGED")
+   self:RegisterEvent("ZONE_CHANGED_INDOORS")
+   self:RegisterEvent("ZONE_CHANGED_NEW_AREA")
    self:RegisterEvent("PLAYER_GUILD_UPDATE")
    self:RegisterEvent("TRADE_SKILL_SHOW")
    self:RegisterEvent("TRADE_SKILL_UPDATE")
@@ -91,6 +94,7 @@ function AltinatorAddon:OnInitialize()
    self:RegisterEvent("BANKFRAME_OPENED")
    self:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
    self:RegisterEvent("BAG_UPDATE_DELAYED")
+   self:RegisterEvent("BAG_UPDATE_COOLDOWN")
    self:RegisterEvent("PLAYERBANKBAGSLOTS_CHANGED")
    self:RegisterEvent("BANKFRAME_CLOSED")
    self:RegisterEvent("PLAYER_PVP_KILLS_CHANGED")
@@ -115,6 +119,9 @@ function AltinatorAddon:OnDisable()
    self:UnregisterEvent("PLAYER_LEVEL_UP")
    self:UnregisterEvent("PLAYER_XP_UPDATE")
    self:UnregisterEvent("PLAYER_UPDATE_RESTING")
+   self:UnregisterEvent("ZONE_CHANGED")
+   self:UnregisterEvent("ZONE_CHANGED_INDOORS")
+   self:UnregisterEvent("ZONE_CHANGED_NEW_AREA")
    self:UnregisterEvent("PLAYER_GUILD_UPDATE")
    self:UnregisterEvent("TRADE_SKILL_SHOW")
    self:UnregisterEvent("TRADE_SKILL_UPDATE")
@@ -124,6 +131,7 @@ function AltinatorAddon:OnDisable()
    self:UnregisterEvent("BANKFRAME_OPENED")
    self:UnregisterEvent("PLAYER_EQUIPMENT_CHANGED")
    self:UnregisterEvent("BAG_UPDATE_DELAYED")
+   self:UnregisterEvent("BAG_UPDATE_COOLDOWN")
    self:UnregisterEvent("PLAYERBANKBAGSLOTS_CHANGED")
    self:UnregisterEvent("BANKFRAME_CLOSED")
    self:UnregisterEvent("PLAYER_PVP_KILLS_CHANGED")
@@ -172,6 +180,18 @@ function AltinatorAddon:PLAYER_UPDATE_RESTING()
    AltinatorNS.AltinatorData:SavePlayerResting()
 end
 
+function AltinatorAddon:ZONE_CHANGED()
+   ScheduleOnce("location", AltinatorNS.AltinatorData.SavePlayerLocation, 0.5)
+end
+
+function AltinatorAddon:ZONE_CHANGED_INDOORS()
+   ScheduleOnce("location", AltinatorNS.AltinatorData.SavePlayerLocation, 0.5)
+end
+
+function AltinatorAddon:ZONE_CHANGED_NEW_AREA()
+   ScheduleOnce("location", AltinatorNS.AltinatorData.SavePlayerLocation, 0.5)
+end
+
 function AltinatorAddon:PLAYER_GUILD_UPDATE()
    AltinatorNS.AltinatorData:SavePlayerGuild()
 end
@@ -213,6 +233,10 @@ end
 
 function AltinatorAddon:BAG_UPDATE_DELAYED()
    ScheduleOnce("bags", BagsChanged, 0.5)
+end
+
+function AltinatorAddon:BAG_UPDATE_COOLDOWN()
+   ScheduleOnce("itemCooldowns", AltinatorNS.AltinatorData.SaveProfessionItemCooldowns, 0.5)
 end
 
 function AltinatorAddon:PLAYER_EQUIPMENT_CHANGED()

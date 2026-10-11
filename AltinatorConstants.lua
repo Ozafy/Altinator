@@ -64,6 +64,10 @@ C["ProfessionSubclassIdToProfessionId"]= {
 }
 C["SecondairyProfession"] = { [129]=true, [185]=true, [356]=true }
 C["SecondairyProfessionOrder"] = { [129]=1, [185]=2, [356]=3 }
+-- items with a cooldown that belongs to a profession, but aren't crafted from the trade skill window
+C["ProfessionCooldownItems"] = {
+    [165] = { 15846 }, -- Leatherworking: Salt Shaker
+}
 C["Genders"] = {"unknown", "male", "female"}
 
 

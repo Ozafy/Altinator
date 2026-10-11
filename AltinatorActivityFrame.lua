@@ -146,6 +146,28 @@ function AltinatorActivityFrame:Initialize(self)
             else
                 scrollFrame.content.LastPlayed[i]:SetText(AltinatorNS:ShortTimeSpanToString(currentTime - lastPlayed))
             end
+            local isOnline = name == data.FullName
+            scrollFrame.content.LastPlayed[i]:SetScript("OnEnter", function(self)
+                AltinatorNS.AltinatorTooltip:SetOwner(self, "ANCHOR_CURSOR")
+                AltinatorNS.AltinatorTooltip:SetText(isOnline and L["Online"] or L["LastLogout"])
+                local resting = L["NoData"]
+                if char.Resting ~= nil then
+                    resting = char.Resting and ("\124cnGREEN_FONT_COLOR:" .. L["Yes"] .. "\124r") or L["No"]
+                end
+                AltinatorNS.AltinatorTooltip:AddDoubleLine(L["Resting"], resting, 1, 1, 1, 1, 1, 1)
+                local location = L["NoData"]
+                if char.Location and char.Location.Zone then
+                    location = char.Location.Zone
+                    if char.Location.SubZone and char.Location.SubZone ~= "" and char.Location.SubZone ~= char.Location.Zone then
+                        location = char.Location.SubZone .. ", " .. char.Location.Zone
+                    end
+                end
+                AltinatorNS.AltinatorTooltip:AddDoubleLine(L["Location"], location, 1, 1, 1, 1, 1, 1)
+                AltinatorNS.AltinatorTooltip:Show()
+            end)
+            scrollFrame.content.LastPlayed[i]:SetScript("OnLeave", function(self)
+                AltinatorNS.AltinatorTooltip:Hide()
+            end)
 
             scrollFrame.content.BoonedTexts[i] = scrollFrame.content.BoonedTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
             scrollFrame.content.BoonedTexts[i]:Show()
