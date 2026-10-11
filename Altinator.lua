@@ -91,6 +91,7 @@ function AltinatorAddon:OnInitialize()
    self:RegisterEvent("CRAFT_UPDATE")
    self:RegisterEvent("CHAT_MSG_SKILL")
    self:RegisterEvent("SKILL_LINES_CHANGED")
+   self:RegisterEvent("SPELLS_CHANGED")
    self:RegisterEvent("BANKFRAME_OPENED")
    self:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
    self:RegisterEvent("BAG_UPDATE_DELAYED")
@@ -128,6 +129,7 @@ function AltinatorAddon:OnDisable()
    self:UnregisterEvent("CRAFT_UPDATE")
    self:UnregisterEvent("CHAT_MSG_SKILL")
    self:UnregisterEvent("SKILL_LINES_CHANGED")
+   self:UnregisterEvent("SPELLS_CHANGED")
    self:UnregisterEvent("BANKFRAME_OPENED")
    self:UnregisterEvent("PLAYER_EQUIPMENT_CHANGED")
    self:UnregisterEvent("BAG_UPDATE_DELAYED")
@@ -215,6 +217,10 @@ end
 
 function AltinatorAddon:SKILL_LINES_CHANGED()
    ScheduleOnce("professions", AltinatorNS.AltinatorData.SavePlayerProfessions, 0.5)
+end
+
+function AltinatorAddon:SPELLS_CHANGED()
+   ScheduleOnce("spells", AltinatorNS.AltinatorData.SavePlayerSpells, 1)
 end
 
 function AltinatorAddon:CRAFT_UPDATE()

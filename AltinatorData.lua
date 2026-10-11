@@ -83,6 +83,7 @@ function AltinatorData:SavePlayerDataLogin()
 
    AltinatorData:SavePlayerProfessions()
    AltinatorData:SaveProfessionItemCooldowns()
+   AltinatorData:SavePlayerSpells()
 
    data.Mail = data.Mail or {}
    for i=#data.Mail,1,-1 do
@@ -315,6 +316,85 @@ end
 
 function AltinatorData:GetCharacterProfession(char, profId)
    return char.Professions[profId] or char.ProfessionsSecondairy[profId] or nil
+end
+
+local function GetSpellBookName(index)
+   if GetSpellBookItemName then
+      return GetSpellBookItemName(index, BOOKTYPE_SPELL)
+   end
+   return C_SpellBook.GetSpellBookItemName(index, Enum.SpellBookSpellBank.Player)
+end
+
+-- stores the highest known rank of every spell in the spellbook, used for the class book tooltips
+function AltinatorData:SavePlayerSpells()
+   local data = AltinatorNS.AltinatorAddon.CurrentCharacter
+   local spells = {}
+   for tab = 1, GetNumSpellTabs() do
+      local _, _, offset, numSpells = GetSpellTabInfo(tab)
+      for index = offset + 1, offset + numSpells do
+         local name, subName = GetSpellBookName(index)
+         if name then
+            local rank = subName and tonumber(subName:match("(%d+)")) or 1
+            if not spells[name] or spells[name] < rank then
+               spells[name] = rank
+            end
+         end
+      end
+   end
+   -- the spellbook can still be empty while loading
+   if next(spells) then
+      data.Spells = spells
+   end
+end
+
+local romanValues = { I = 1, V = 5, X = 10, L = 50, C = 100 }
+
+local function RomanToNumber(roman)
+   local total = 0
+   local previous = 0
+   for i = #roman, 1, -1 do
+      local value = romanValues[roman:sub(i, i)]
+      if value < previous then
+         total = total - value
+      else
+         total = total + value
+         previous = value
+      end
+   end
+   return total
+end
+
+-- class books are named after the spell they teach, with the rank as a roman numeral (e.g. Tome of Fireball XII)
+function AltinatorData:ClassBookKnownOrLearnable(itemName, classNames)
+   local characters = {}
+   for _, name in ipairs(AltinatorNS:GetRealmCharactersSorted()) do
+      local char = AltinatorNS.AltinatorDB.global.characters[name]
+      if char and char.Class and tContains(classNames, char.Class.Name) then
+         table.insert(characters, char)
+      end
+   end
+
+   local spellName
+   for _, char in ipairs(characters) do
+      for name in pairs(char.Spells or {}) do
+         if (not spellName or #name > #spellName) and itemName:find(name, 1, true) then
+            spellName = name
+         end
+      end
+   end
+   local roman = itemName:match(" ([IVXLC]+)$")
+   local rank = roman and RomanToNumber(roman) or 1
+
+   local charactersThatKnow = {}
+   local charactersThatCouldLearn = {}
+   for _, char in ipairs(characters) do
+      if spellName and char.Spells and char.Spells[spellName] and char.Spells[spellName] >= rank then
+         table.insert(charactersThatKnow, char)
+      else
+         table.insert(charactersThatCouldLearn, char)
+      end
+   end
+   return charactersThatKnow, charactersThatCouldLearn
 end
 
 function AltinatorData:CharacterProfessionRecipeKnownOrLearnable(profId, spellId, itemId)

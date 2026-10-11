@@ -51,6 +51,7 @@ C["ProfessionIcons"]= {
     [393] = "inv_misc_pelt_wolf_01"
 }
 C["RecipeClassId"] = 9
+C["BookSubclassId"] = 0 -- class books (Tome of ..., Book of ..., Libram: ...)
 C["ProfessionSubclassIdToProfessionId"]= {
     [7] = 129,
     [4] = 164,
