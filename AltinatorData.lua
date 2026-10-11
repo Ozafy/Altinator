@@ -47,18 +47,8 @@ function AltinatorData:SavePlayerDataLogin()
    data.Level = UnitLevel("player")
    data.Faction = UnitFactionGroup("player")
 
-   local overall, equipped = GetAverageItemLevel()
-   data.ItemLevel = data.ItemLevel or {}
-   data.ItemLevel.Overall = overall
-   data.ItemLevel.Equipped = equipped
-      
-   data.Rank = data.Rank or {}
-   data.Rank.Value = UnitPVPRank("player")
-   data.Rank.Name = GetPVPRankInfo(data.Rank.Value)
-   local hk, points = GetPVPThisWeekStats()
-   data.Honour = data.Honour or {}
-   data.Honour.HKs = hk
-   data.Honour.Points = points
+   AltinatorData:SavePlayerItemLevel()
+   AltinatorData:SavePlayerHonour()
 
    data.Money = GetMoney()
    data.LastLogin = time()
@@ -88,6 +78,7 @@ function AltinatorData:SavePlayerDataLogin()
    data.XP.Current=UnitXP("player")
    data.XP.Needed=UnitXPMax("player")
    data.XP.Rested=GetXPExhaustion()
+   data.Resting = IsResting()
 
    AltinatorData:SavePlayerProfessions()
 
@@ -99,26 +90,54 @@ function AltinatorData:SavePlayerDataLogin()
       end
    end
 
+   AltinatorData:SavePlayerBags()
+   AltinatorData:SavePlayerAttunements()
+end
+
+function AltinatorData:SavePlayerItemLevel()
+   local data = AltinatorNS.AltinatorAddon.CurrentCharacter
+   local overall, equipped = GetAverageItemLevel()
+   data.ItemLevel = data.ItemLevel or {}
+   data.ItemLevel.Overall = overall
+   data.ItemLevel.Equipped = equipped
+end
+
+function AltinatorData:SavePlayerHonour()
+   local data = AltinatorNS.AltinatorAddon.CurrentCharacter
+   data.Rank = data.Rank or {}
+   data.Rank.Value = UnitPVPRank("player")
+   data.Rank.Name = GetPVPRankInfo(data.Rank.Value)
+   local hk, points = GetPVPThisWeekStats()
+   data.Honour = data.Honour or {}
+   data.Honour.HKs = hk
+   data.Honour.Points = points
+end
+
+function AltinatorData:SavePlayerBags()
+   local data = AltinatorNS.AltinatorAddon.CurrentCharacter
    data.Containers = data.Containers or {}
    data.Containers.Bags = data.Containers.Bags or {}
    data.Containers.Bank = data.Containers.Bank or {}
+   for bag=0, NUM_BAG_SLOTS do
+      local containerSlots = C_Container.GetContainerNumSlots(bag)
+      if containerSlots then
+         data.Containers.Bags["bag_" .. bag] = data.Containers.Bags["bag_" .. bag] or {}
+         data.Containers.Bags["bag_" .. bag].Slots = containerSlots
+      end
+   end
+end
 
-
+function AltinatorData:SavePlayerAttunements()
+   local data = AltinatorNS.AltinatorAddon.CurrentCharacter
+   local bagSlots = {}
+   for bag=0, NUM_BAG_SLOTS do
+      table.insert(bagSlots, bag)
+   end
    data.Attunements = data.Attunements or {}
    for i, attunement in ipairs(C["Attunements"]) do
       data.Attunements[i] = data.Attunements[i] or {}
       if not data.Attunements[i].Completed then
          if attunement.type==1 then
-            local bagSlots = {
-            }
-            for bag=0, NUM_BAG_SLOTS do
-               table.insert(bagSlots, bag)
-               local containerSlots = C_Container.GetContainerNumSlots(bag)
-               if containerSlots then
-                  data.Containers.Bags["bag_" .. bag] = data.Containers.Bags["bag_" .. bag] or {}
-                  data.Containers.Bags["bag_" .. bag].Slots = containerSlots
-               end
-            end
             if attunement.attunementItem then
                local hasItem = FindInBagSlot(bagSlots, attunement.attunementItem)
                if hasItem then
@@ -134,10 +153,7 @@ function AltinatorData:SavePlayerDataLogin()
             end
          elseif attunement.type==3 then
             if attunement.attunementItem then
-               local bagSlots = {
-                  KEYRING_CONTAINER
-               }
-               local hasItem = FindInBagSlot(bagSlots, attunement.attunementItem)
+               local hasItem = FindInBagSlot({ KEYRING_CONTAINER }, attunement.attunementItem)
                if hasItem then
                   data.Attunements[i].Completed = true
                end
@@ -240,6 +256,13 @@ end
 function AltinatorData:SavePlayerDataLogout()
    local data = AltinatorNS.AltinatorAddon.CurrentCharacter
    data.LastLogout = time()
+   -- /played is only requested on load, add the time played since then
+   if data.TimePlayed and data.TimePlayed.Received then
+      local elapsed = time() - data.TimePlayed.Received
+      data.TimePlayed.Total = data.TimePlayed.Total + elapsed
+      data.TimePlayed.Level = data.TimePlayed.Level + elapsed
+      data.TimePlayed.Received = nil
+   end
 end
 
 
@@ -248,6 +271,7 @@ function AltinatorData:SavePlayerTimePlayed(total, level)
    data.TimePlayed = {}
    data.TimePlayed.Total = total
    data.TimePlayed.Level = level
+   data.TimePlayed.Received = time()
 end
 
 function AltinatorData:SavePlayerMoney(total, level)
@@ -255,9 +279,10 @@ function AltinatorData:SavePlayerMoney(total, level)
    data.Money = GetMoney()
 end
 
-function AltinatorData:SavePlayerXP()
+function AltinatorData:SavePlayerXP(level)
    local data = AltinatorNS.AltinatorAddon.CurrentCharacter
-   data.Level = UnitLevel("player")
+   -- UnitLevel still returns the old level during PLAYER_LEVEL_UP, so that event passes the new one
+   data.Level = level or UnitLevel("player")
    data.XP=data.XP or{}
    data.XP.Current=UnitXP("player")
    data.XP.Needed=UnitXPMax("player")

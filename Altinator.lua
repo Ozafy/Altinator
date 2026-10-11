@@ -23,8 +23,22 @@ local function ScheduleOnce(key, func, delay)
    end
    pendingTimers[key] = AltinatorAddon:ScheduleTimer(function()
       pendingTimers[key] = nil
-      func()
+      -- events can fire during loading, before the character data is set up
+      if AltinatorAddon.CurrentCharacter.FullName then
+         func()
+      end
    end, delay)
+end
+
+local bankOpen = false
+
+local function BagsChanged()
+   AltinatorNS.AltinatorData:SavePlayerBags()
+   AltinatorNS.AltinatorData:SavePlayerItemLevel() -- overall item level includes items in bags
+   AltinatorNS.AltinatorData:SavePlayerAttunements()
+   if bankOpen then
+      AltinatorNS.AltinatorData:ScanBank()
+   end
 end
 
 SLASH_ALTINATOR1, SLASH_ALTINATOR2 = "/alt", "/altinator"
@@ -75,6 +89,14 @@ function AltinatorAddon:OnInitialize()
    self:RegisterEvent("CHAT_MSG_SKILL")
    self:RegisterEvent("SKILL_LINES_CHANGED")
    self:RegisterEvent("BANKFRAME_OPENED")
+   self:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+   self:RegisterEvent("BAG_UPDATE_DELAYED")
+   self:RegisterEvent("PLAYERBANKBAGSLOTS_CHANGED")
+   self:RegisterEvent("BANKFRAME_CLOSED")
+   self:RegisterEvent("PLAYER_PVP_KILLS_CHANGED")
+   self:RegisterEvent("PLAYER_PVP_RANK_CHANGED")
+   self:RegisterEvent("CHAT_MSG_COMBAT_HONOR_GAIN")
+   self:RegisterEvent("QUEST_TURNED_IN")
    self:RegisterEvent("UNIT_SPELLCAST_START")
    self:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
    self:RegisterEvent("UNIT_SPELLCAST_STOP")
@@ -100,6 +122,14 @@ function AltinatorAddon:OnDisable()
    self:UnregisterEvent("CHAT_MSG_SKILL")
    self:UnregisterEvent("SKILL_LINES_CHANGED")
    self:UnregisterEvent("BANKFRAME_OPENED")
+   self:UnregisterEvent("PLAYER_EQUIPMENT_CHANGED")
+   self:UnregisterEvent("BAG_UPDATE_DELAYED")
+   self:UnregisterEvent("PLAYERBANKBAGSLOTS_CHANGED")
+   self:UnregisterEvent("BANKFRAME_CLOSED")
+   self:UnregisterEvent("PLAYER_PVP_KILLS_CHANGED")
+   self:UnregisterEvent("PLAYER_PVP_RANK_CHANGED")
+   self:UnregisterEvent("CHAT_MSG_COMBAT_HONOR_GAIN")
+   self:UnregisterEvent("QUEST_TURNED_IN")
    self:UnregisterEvent("UNIT_SPELLCAST_START")
    self:UnregisterEvent("UNIT_SPELLCAST_INTERRUPTED")
    self:UnregisterEvent("UNIT_SPELLCAST_STOP")
@@ -130,8 +160,8 @@ function AltinatorAddon:PLAYER_MONEY()
    AltinatorNS.AltinatorData:SavePlayerMoney()
 end
 
-function AltinatorAddon:PLAYER_LEVEL_UP()
-   AltinatorNS.AltinatorData:SavePlayerXP()
+function AltinatorAddon:PLAYER_LEVEL_UP(event, level)
+   AltinatorNS.AltinatorData:SavePlayerXP(level)
 end
 
 function AltinatorAddon:PLAYER_XP_UPDATE()
@@ -140,14 +170,6 @@ end
 
 function AltinatorAddon:PLAYER_UPDATE_RESTING()
    AltinatorNS.AltinatorData:SavePlayerResting()
-end
-
-function AltinatorAddon:PLAYER_GUILD_UPDATE()
-   AltinatorNS.AltinatorData:SavePlayerGuild()
-end
-
-function AltinatorAddon:PLAYER_GUILD_UPDATE()
-   AltinatorNS.AltinatorData:SavePlayerGuild()
 end
 
 function AltinatorAddon:PLAYER_GUILD_UPDATE()
@@ -177,7 +199,41 @@ function AltinatorAddon:CRAFT_UPDATE()
 end
 
 function AltinatorAddon:BANKFRAME_OPENED()
+   bankOpen = true
    AltinatorAddon:ScheduleTimer(AltinatorNS.AltinatorData.ScanBank, 0.5)	
+end
+
+function AltinatorAddon:BANKFRAME_CLOSED()
+   bankOpen = false
+end
+
+function AltinatorAddon:PLAYERBANKBAGSLOTS_CHANGED()
+   ScheduleOnce("bank", AltinatorNS.AltinatorData.ScanBank, 0.5)
+end
+
+function AltinatorAddon:BAG_UPDATE_DELAYED()
+   ScheduleOnce("bags", BagsChanged, 0.5)
+end
+
+function AltinatorAddon:PLAYER_EQUIPMENT_CHANGED()
+   ScheduleOnce("itemLevel", AltinatorNS.AltinatorData.SavePlayerItemLevel, 0.5)
+end
+
+function AltinatorAddon:PLAYER_PVP_KILLS_CHANGED()
+   ScheduleOnce("honour", AltinatorNS.AltinatorData.SavePlayerHonour, 1)
+end
+
+function AltinatorAddon:PLAYER_PVP_RANK_CHANGED()
+   ScheduleOnce("honour", AltinatorNS.AltinatorData.SavePlayerHonour, 1)
+end
+
+function AltinatorAddon:CHAT_MSG_COMBAT_HONOR_GAIN()
+   ScheduleOnce("honour", AltinatorNS.AltinatorData.SavePlayerHonour, 1)
+end
+
+-- the quest isn't always flagged as completed yet when this fires
+function AltinatorAddon:QUEST_TURNED_IN()
+   ScheduleOnce("attunements", AltinatorNS.AltinatorData.SavePlayerAttunements, 1)
 end
 
 function AltinatorAddon:UNIT_SPELLCAST_START(event, unit, castGUID, spellId)
