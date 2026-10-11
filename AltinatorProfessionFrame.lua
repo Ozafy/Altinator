@@ -34,6 +34,7 @@ local function CreateProfessionTexture(char, contentFrame, charIndex, anchor, ba
    contentFrame.ProfessionIcons = contentFrame.ProfessionIcons or {}
    contentFrame.ProfessionIcons[charIndex] = contentFrame.ProfessionIcons[charIndex] or {}
    contentFrame.ProfessionIcons[charIndex][profIndex] = contentFrame.ProfessionIcons[charIndex][profIndex] or contentFrame:CreateTexture("Profession_Icon_" .. id, "BACKGROUND")
+   contentFrame.ProfessionIcons[charIndex][profIndex]:Show()
    contentFrame.ProfessionIcons[charIndex][profIndex]:SetWidth(iconSize)
    contentFrame.ProfessionIcons[charIndex][profIndex]:SetHeight(iconSize)
    contentFrame.ProfessionIcons[charIndex][profIndex]:SetPoint("LEFT", anchor,"LEFT", baseOffset + (profPosition * 80), 0)
@@ -42,6 +43,7 @@ local function CreateProfessionTexture(char, contentFrame, charIndex, anchor, ba
    contentFrame.ProfessionTexts = contentFrame.ProfessionTexts or {}
    contentFrame.ProfessionTexts[charIndex] = contentFrame.ProfessionTexts[charIndex] or {}
    contentFrame.ProfessionTexts[charIndex][profIndex] = contentFrame.ProfessionTexts[charIndex][profIndex] or contentFrame:CreateFontString("Profession_Text_" .. id, "ARTWORK", "GameFontHighlight")
+   contentFrame.ProfessionTexts[charIndex][profIndex]:Show()
    contentFrame.ProfessionTexts[charIndex][profIndex]:SetPoint("LEFT", anchor, "LEFT", baseOffset + 20 + (profPosition * 80), 0)
    contentFrame.ProfessionTexts[charIndex][profIndex]:SetText(profession.Skill.."/"..profession.SkillMax)
    local levelPerc = profession.Skill/profession.SkillMax*100
@@ -73,6 +75,7 @@ function AltinatorProfessionFrame:Initialize(self)
     self.CooldownHeader:SetText(L["ProfessionCooldowns"])
 
     local scrollFrame = self.ScrollFrame or AltinatorNS:CreateScrollFrame(self)
+    AltinatorNS:HideRowWidgets(scrollFrame.content)
 
     local totalCharacters = 0
     local characters = AltinatorNS:GetRealmCharactersSorted()
@@ -107,6 +110,7 @@ function AltinatorProfessionFrame:Initialize(self)
 
          scrollFrame.content.ProfessionCooldownTexts = scrollFrame.content.ProfessionCooldownTexts or {}
          scrollFrame.content.ProfessionCooldownTexts[i] = scrollFrame.content.ProfessionCooldownTexts[i] or scrollFrame.content:CreateFontString("Profession_Cooldown_Text_" .. i, "ARTWORK", "GameFontHighlight")
+         scrollFrame.content.ProfessionCooldownTexts[i]:Show()
          scrollFrame.content.ProfessionCooldownTexts[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 615, 0)
          if #cooldowns > 0 then
             scrollFrame.content.ProfessionCooldownTexts[i]:SetScript("OnEnter", function(self)
@@ -126,6 +130,8 @@ function AltinatorProfessionFrame:Initialize(self)
             end
          else
             scrollFrame.content.ProfessionCooldownTexts[i]:SetText(L["ProfessionNoCooldowns"])
+            scrollFrame.content.ProfessionCooldownTexts[i]:SetScript("OnEnter", nil)
+            scrollFrame.content.ProfessionCooldownTexts[i]:SetScript("OnLeave", nil)
          end
         totalCharacters = totalCharacters + 1
     end

@@ -130,7 +130,7 @@ function AltinatorData:SavePlayerDataLogin()
    data.Mail = data.Mail or {}
    for i=#data.Mail,1,-1 do
       if data.Mail[i].ExpiryTime < time() then
-         AutoReturnMail(data.Mail)
+         AutoReturnMail(data.Mail[i])
          table.remove(data.Mail, i)
       end
    end
@@ -437,8 +437,8 @@ hooksecurefunc("ReturnInboxItem", function(index, ...)
       data.Mail = data.Mail or {}
       table.insert(data.Mail, {
          Sender = AltinatorNS.AltinatorAddon.CurrentCharacter.FullName,
-         Subject = subject,
-         Body = body or "",
+         Subject = mailSubject,
+         Body = "",
          Time = time(),
          ArrivalTime = time(),
          ExpiryTime = time() + C["MailExpiry"] * 86400,

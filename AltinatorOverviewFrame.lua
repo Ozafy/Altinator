@@ -50,6 +50,7 @@ function AltinatorOverviewFrame:Initialize(self)
 
 
     local scrollFrame = self.ScrollFrame or AltinatorNS:CreateScrollFrame(self)
+    AltinatorNS:HideRowWidgets(scrollFrame.content)
 
     local totalCharacters = 0
     local totalMoney = 0
@@ -66,6 +67,7 @@ function AltinatorOverviewFrame:Initialize(self)
          AltinatorNS:CreateCharacterName(scrollFrame.content, i, char, scrollFrame.content, _PADDING, _HEIGHT, _ICON_SIZE)
 
          scrollFrame.content.GuildNames[i] = scrollFrame.content.GuildNames[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+         scrollFrame.content.GuildNames[i]:Show()
          scrollFrame.content.GuildNames[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 165, 0)
          if char.Guild then
             scrollFrame.content.GuildNames[i]:SetText(char.Guild.Name)
@@ -75,11 +77,13 @@ function AltinatorOverviewFrame:Initialize(self)
 
 
          scrollFrame.content.MoneyTexts[i] = scrollFrame.content.MoneyTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+         scrollFrame.content.MoneyTexts[i]:Show()
          scrollFrame.content.MoneyTexts[i]:SetPoint("RIGHT", scrollFrame.content.FactionIcons[i], "LEFT", 495, 0)
          scrollFrame.content.MoneyTexts[i]:SetText(AltinatorNS:MoneyToGoldString(char.Money))
          totalMoney = totalMoney + char.Money
 
          scrollFrame.content.LevelTexts[i] = scrollFrame.content.LevelTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+         scrollFrame.content.LevelTexts[i]:Show()
          scrollFrame.content.LevelTexts[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 505, 0)
          local level = char.Level
          local r, g, b, hex = C_Item.GetItemQualityColor(math.floor(level/10))
@@ -104,6 +108,7 @@ function AltinatorOverviewFrame:Initialize(self)
 
          scrollFrame.content.ItemLevelTexts = scrollFrame.content.ItemLevelTexts or {}
          scrollFrame.content.ItemLevelTexts[i] = scrollFrame.content.ItemLevelTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+         scrollFrame.content.ItemLevelTexts[i]:Show()
          scrollFrame.content.ItemLevelTexts[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 590, 0)
          if char.ItemLevel then
             local r, g, b, hex = C_Item.GetItemQualityColor(0)
@@ -124,10 +129,12 @@ function AltinatorOverviewFrame:Initialize(self)
 
          scrollFrame.content.BagTexts = scrollFrame.content.BagTexts or {}
          scrollFrame.content.BagTexts[i] = scrollFrame.content.BagTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+         scrollFrame.content.BagTexts[i]:Show()
          scrollFrame.content.BagTexts[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 670, 0)
 
          scrollFrame.content.BankBagTexts = scrollFrame.content.BankBagTexts or {}
          scrollFrame.content.BankBagTexts[i] = scrollFrame.content.BankBagTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+         scrollFrame.content.BankBagTexts[i]:Show()
          scrollFrame.content.BankBagTexts[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 785, 0)
         if char.Containers then
             
@@ -178,10 +185,12 @@ function AltinatorOverviewFrame:Initialize(self)
     end
 
     scrollFrame.content.TotalName = scrollFrame.content.TotalName or scrollFrame.content:CreateFontString("TotalsName", "ARTWORK", "GameFontHighlight")
+    scrollFrame.content.TotalName:Show()
     scrollFrame.content.TotalName:SetPoint("TOPLEFT", self.NameHeader, "BOTTOMLEFT", 0, _HEIGHT * -1 * (totalCharacters+2))
     scrollFrame.content.TotalName:SetText(L["Totals"])
 
     scrollFrame.content.TotalMoneyString = scrollFrame.content.TotalMoneyString or scrollFrame.content:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+    scrollFrame.content.TotalMoneyString:Show()
     scrollFrame.content.TotalMoneyString:SetPoint("RIGHT", scrollFrame.content.TotalName, "LEFT", 495, 0)
     scrollFrame.content.TotalMoneyString:SetText(AltinatorNS:MoneyToGoldString(totalMoney))
 

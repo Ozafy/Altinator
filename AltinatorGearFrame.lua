@@ -41,24 +41,28 @@ function AltinatorGearFrame:Initialize(self)
         end
 
         local scrollFrame = self.ScrollFrame or AltinatorNS:CreateScrollFrame(self, nil, (_ICON_SIZE * -1)-_ICON_PADDING)
+        AltinatorNS:HideRowWidgets(scrollFrame.content)
 
         local totalCharacters = 0
         local characters = AltinatorNS:GetRealmCharactersSorted()
         scrollFrame.content.ClassFrames = scrollFrame.content.ClassFrames or {}
         scrollFrame.content.CharNames = scrollFrame.content.CharNames or {}
 
-        for i, name in ipairs(characters) do
+        for _, name in ipairs(characters) do
             local char = AltinatorDB.global.characters[name]
             local charSyndicator = Syndicator.API.GetByCharacterFullName(name)
             if (charSyndicator) then
+                local i = totalCharacters + 1 -- row index, skipped characters must not leave gaps
                 local equipment = charSyndicator["equipped"]
 
                 scrollFrame.content.ClassFrames[i] = scrollFrame.content.ClassFrames[i] or scrollFrame.content:CreateTexture(nil, "BACKGROUND")
+                scrollFrame.content.ClassFrames[i]:Show()
                 scrollFrame.content.ClassFrames[i]:SetSize(_ICON_SIZE, _ICON_SIZE)
                 scrollFrame.content.ClassFrames[i]:SetPoint("TOPLEFT", _PADDING, (_HEIGHT * -1 * (i-1)) - _HEIGHT)
                 scrollFrame.content.ClassFrames[i]:SetTexture("Interface\\ICONS\\classicon_" .. char.Class.File)
                 
                 scrollFrame.content.CharNames[i] = scrollFrame.content.CharNames[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+                scrollFrame.content.CharNames[i]:Show()
                 scrollFrame.content.CharNames[i]:SetPoint("LEFT", scrollFrame.content.ClassFrames[i], "LEFT", _ICON_SIZE + _ICON_PADDING, 0)
                 scrollFrame.content.CharNames[i]:SetText(char.Name)
                 local cr, cg, cb, web = GetClassColor(char.Class.File)
@@ -67,6 +71,7 @@ function AltinatorGearFrame:Initialize(self)
                 for j = 2, 20 do
                     local item = equipment[j]
                     scrollFrame.content["item" .. i .. "i" .. j] = scrollFrame.content["item" .. i .. "i" .. j] or CreateFrame("BUTTON", nil, scrollFrame.content)
+                    scrollFrame.content["item" .. i .. "i" .. j]:Show()
                     scrollFrame.content["item" .. i .. "i" .. j]:SetSize(_ICON_SIZE, _ICON_SIZE)
                     scrollFrame.content["item" .. i .. "i" .. j]:SetPoint("LEFT", scrollFrame.content.ClassFrames[i], "LEFT", (j*(_ICON_SIZE+_ICON_PADDING))+96, 0)
                     if item["quality"] then

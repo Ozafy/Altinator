@@ -43,6 +43,7 @@ function AltinatorActivityFrame:Initialize(self)
         self.HonourHeader:SetText(L["Honour"])
 
         local scrollFrame = self.ScrollFrame or AltinatorNS:CreateScrollFrame(self)
+        AltinatorNS:HideRowWidgets(scrollFrame.content)
 
         local currentTime = time()
         local totalCharacters = 0
@@ -61,13 +62,15 @@ function AltinatorActivityFrame:Initialize(self)
         scrollFrame.content.LastPlayed = scrollFrame.content.LastPlayed or {}
         scrollFrame.content.HonourTexts = scrollFrame.content.HonourTexts or {}
         scrollFrame.content.BoonedTexts = scrollFrame.content.BoonedTexts or {}
-        for i, name in ipairs(characters) do
+        for _, name in ipairs(characters) do
             local char = AltinatorDB.global.characters[name]
             local charSyndicator = Syndicator.API.GetByCharacterFullName(name)
             if charSyndicator then
+            local i = totalCharacters + 1 -- row index, skipped characters must not leave gaps
             AltinatorNS:CreateCharacterName(scrollFrame.content, i, char, scrollFrame.content, _PADDING, _HEIGHT, _ICON_SIZE)
 
             scrollFrame.content.MailTexts[i] = scrollFrame.content.MailTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+            scrollFrame.content.MailTexts[i]:Show()
             scrollFrame.content.MailTexts[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 165, 0)
             local charMails = 0
             local charMailsInTransit = {}
@@ -87,16 +90,24 @@ function AltinatorActivityFrame:Initialize(self)
                         AltinatorNS.AltinatorTooltip:SetOwner(self, "ANCHOR_CURSOR")
                         AltinatorNS.AltinatorTooltip:SetText(L["MailInTransit"])
                         for _, arrivalTime in ipairs(charMailsInTransit) do
-                            AltinatorNS.AltinatorTooltip:AddLine(L["MailInTransit_ArrivesIn"] .. " " .. AltinatorNS:LongTimeSpanToString(arrivalTime - time()), 1, 1, 1)
+                            -- mail may have arrived since the frame was drawn, a negative span would show as ~24h
+                            if arrivalTime > time() then
+                                AltinatorNS.AltinatorTooltip:AddLine(L["MailInTransit_ArrivesIn"] .. " " .. AltinatorNS:LongTimeSpanToString(arrivalTime - time()), 1, 1, 1)
+                            end
                         end
                         AltinatorNS.AltinatorTooltip:Show()
                     end)
                     scrollFrame.content.MailTexts[i]:SetScript("OnLeave", function(self)
                         AltinatorNS.AltinatorTooltip:Hide()
                     end)
+                else
+                    scrollFrame.content.MailTexts[i]:SetScript("OnEnter", nil)
+                    scrollFrame.content.MailTexts[i]:SetScript("OnLeave", nil)
                 end
             else
                 scrollFrame.content.MailTexts[i]:SetText(charMails)
+                scrollFrame.content.MailTexts[i]:SetScript("OnEnter", nil)
+                scrollFrame.content.MailTexts[i]:SetScript("OnLeave", nil)
             end
 
             local auctionCount = 0
@@ -111,6 +122,7 @@ function AltinatorActivityFrame:Initialize(self)
             totalAuctionItems = totalAuctionItems + auctionItems
 
             scrollFrame.content.AuctionTexts[i] = scrollFrame.content.AuctionTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+            scrollFrame.content.AuctionTexts[i]:Show()
             scrollFrame.content.AuctionTexts[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 265, 0)
             if auctionCount>0 then
                 scrollFrame.content.AuctionTexts[i]:SetText("\124cnGREEN_FONT_COLOR:" .. auctionCount .. " (" .. auctionItems .. " " .. L["AuctionItems"] .. ")\124r")
@@ -120,12 +132,14 @@ function AltinatorActivityFrame:Initialize(self)
             
 
             scrollFrame.content.PlayedTexts[i] = scrollFrame.content.PlayedTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+            scrollFrame.content.PlayedTexts[i]:Show()
             scrollFrame.content.PlayedTexts[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 390, 0)
             scrollFrame.content.PlayedTexts[i]:SetText(char.TimePlayed and AltinatorNS:LongTimeSpanToString(char.TimePlayed.Total) or "")
             totalPlayed = totalPlayed + (char.TimePlayed and char.TimePlayed.Total or 0)
 
             local lastPlayed = (char.LastLogout or char.LastLogin)
             scrollFrame.content.LastPlayed[i] = scrollFrame.content.LastPlayed[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+            scrollFrame.content.LastPlayed[i]:Show()
             scrollFrame.content.LastPlayed[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 515, 0)
             if name == data.FullName then
                 scrollFrame.content.LastPlayed[i]:SetText("\124cnGREEN_FONT_COLOR:" .. L["Online"] .. "\124r")
@@ -134,6 +148,7 @@ function AltinatorActivityFrame:Initialize(self)
             end
 
             scrollFrame.content.BoonedTexts[i] = scrollFrame.content.BoonedTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+            scrollFrame.content.BoonedTexts[i]:Show()
             scrollFrame.content.BoonedTexts[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 640, 0)
             if char.WorldBuffs and #char.WorldBuffs > 0 then
                 scrollFrame.content.BoonedTexts[i]:SetText("\124cnGREEN_FONT_COLOR:" .. #char.WorldBuffs .. "\124r")
@@ -151,10 +166,13 @@ function AltinatorActivityFrame:Initialize(self)
                 end)
             else
                 scrollFrame.content.BoonedTexts[i]:SetText(L["No"])
+                scrollFrame.content.BoonedTexts[i]:SetScript("OnEnter", nil)
+                scrollFrame.content.BoonedTexts[i]:SetScript("OnLeave", nil)
             end
             
 
             scrollFrame.content.HonourTexts[i] = scrollFrame.content.HonourTexts[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+            scrollFrame.content.HonourTexts[i]:Show()
             scrollFrame.content.HonourTexts[i]:SetPoint("LEFT", scrollFrame.content.FactionIcons[i], "LEFT", 765, 0)
             char.Honour = char.Honour or { HKs = 0, Points = 0 }
             
@@ -174,18 +192,22 @@ function AltinatorActivityFrame:Initialize(self)
         end
 
         scrollFrame.content.TotalName = scrollFrame.content.TotalName or scrollFrame.content:CreateFontString("TotalsName", "ARTWORK", "GameFontHighlight")
+        scrollFrame.content.TotalName:Show()
         scrollFrame.content.TotalName:SetPoint("TOPLEFT", self.NameHeader, "BOTTOMLEFT", 0, _HEIGHT * -1 * (totalCharacters+2))
         scrollFrame.content.TotalName:SetText(L["Totals"])
 
         scrollFrame.content.TotalMailString = scrollFrame.content.TotalMailString or scrollFrame.content:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+        scrollFrame.content.TotalMailString:Show()
         scrollFrame.content.TotalMailString:SetPoint("LEFT", scrollFrame.content.TotalName, "LEFT", 165, 0)
         scrollFrame.content.TotalMailString:SetText(totalMail)
 
         scrollFrame.content.TotalAuctionsString = scrollFrame.content.TotalAuctionsString or scrollFrame.content:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+        scrollFrame.content.TotalAuctionsString:Show()
         scrollFrame.content.TotalAuctionsString:SetPoint("LEFT", scrollFrame.content.TotalName, "LEFT", 265, 0)
         scrollFrame.content.TotalAuctionsString:SetText(totalAuctions .. " (" .. totalAuctionItems .. " " .. L["AuctionItems"] .. ")")
 
         scrollFrame.content.TotalPlayedString = scrollFrame.content.TotalPlayedString or scrollFrame.content:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+        scrollFrame.content.TotalPlayedString:Show()
         scrollFrame.content.TotalPlayedString:SetPoint("LEFT", scrollFrame.content.TotalName, "LEFT", 390, 0)
         scrollFrame.content.TotalPlayedString:SetText(AltinatorNS:LongTimeSpanToString(totalPlayed))
         scrollFrame.content:SetSize(C["Width"], _HEIGHT * (totalCharacters + 2))

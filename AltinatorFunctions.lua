@@ -181,6 +181,7 @@ end
 
 function AltinatorNS:CreateCharacterName(contentFrame, charIndex, char, anchor, OffsetX, baseOffsetY, iconSize)
    contentFrame.FactionIcons[charIndex] = contentFrame.FactionIcons[charIndex] or contentFrame:CreateTexture("Faction_Icon_" .. charIndex, "BACKGROUND")
+   contentFrame.FactionIcons[charIndex]:Show()
    contentFrame.FactionIcons[charIndex]:SetSize(iconSize, iconSize)
    contentFrame.FactionIcons[charIndex]:SetPoint("TOPLEFT", anchor, "TOPLEFT", OffsetX, baseOffsetY * -1 * (charIndex-1))
    local factionIcon, raceIcon, classIcon, showRank = AltinatorNS:GetCharacterIcons(char)
@@ -199,20 +200,48 @@ function AltinatorNS:CreateCharacterName(contentFrame, charIndex, char, anchor, 
    contentFrame.FactionIcons[charIndex]:SetTexture(factionIcon)
 
    contentFrame.RaceIcons[charIndex] = contentFrame.RaceIcons[charIndex] or contentFrame:CreateTexture("Race_Icon_" .. charIndex, "BACKGROUND")
+   contentFrame.RaceIcons[charIndex]:Show()
    contentFrame.RaceIcons[charIndex]:SetSize(iconSize, iconSize)
    contentFrame.RaceIcons[charIndex]:SetPoint("LEFT", contentFrame.FactionIcons[charIndex], "LEFT", 15, 0)
    contentFrame.RaceIcons[charIndex]:SetTexture(raceIcon)
 
    contentFrame.ClassIcons[charIndex] = contentFrame.ClassIcons[charIndex] or contentFrame:CreateTexture("Class_Icon_" .. charIndex, "BACKGROUND")
+   contentFrame.ClassIcons[charIndex]:Show()
    contentFrame.ClassIcons[charIndex]:SetSize(iconSize, iconSize)
    contentFrame.ClassIcons[charIndex]:SetPoint("LEFT", contentFrame.RaceIcons[charIndex], "LEFT", 15, 0)
    contentFrame.ClassIcons[charIndex]:SetTexture(classIcon)
 
    contentFrame.CharNames[charIndex] = contentFrame.CharNames[charIndex] or contentFrame:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+   contentFrame.CharNames[charIndex]:Show()
    contentFrame.CharNames[charIndex]:SetPoint("LEFT", contentFrame.ClassIcons[charIndex], "LEFT", 20, 0)
    contentFrame.CharNames[charIndex]:SetText(char.Name)
    local cr, cg, cb, web = GetClassColor(char.Class.File)
    contentFrame.CharNames[charIndex]:SetTextColor(cr, cg, cb)
+end
+
+local function HidePooledWidgets(pool)
+   for _, value in pairs(pool) do
+      if type(value) == "table" then
+         if value.GetObjectType then
+            value:Hide()
+         else
+            HidePooledWidgets(value)
+         end
+      end
+   end
+end
+
+-- hide all reused row widgets before a redraw, so rows of characters that are no longer listed don't linger
+function AltinatorNS:HideRowWidgets(contentFrame)
+   for key, value in pairs(contentFrame) do
+      if type(value) == "table" then
+         if not value.GetObjectType then
+            HidePooledWidgets(value)
+         elseif type(key) == "string" and key:match("^item%d+i%d+$") then
+            value:Hide()
+         end
+      end
+   end
 end
 
 function AltinatorNS:CreateScrollFrame(parent, topX, topY, bottomX, bottomY)

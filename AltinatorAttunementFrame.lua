@@ -40,6 +40,7 @@ function AltinatorAttunementFrame:Initialize(self)
     end
 
     local scrollFrame = self.ScrollFrame or AltinatorNS:CreateScrollFrame(self, nil, (_ICON_SIZE * -1)-_ICON_PADDING)
+    AltinatorNS:HideRowWidgets(scrollFrame.content)
 
     local totalCharacters = 0
     local characters = AltinatorNS:GetRealmCharactersSorted()
@@ -50,11 +51,13 @@ function AltinatorAttunementFrame:Initialize(self)
         local char = AltinatorDB.global.characters[name]
 
         scrollFrame.content.ClassFrames[i] = scrollFrame.content.ClassFrames[i] or scrollFrame.content:CreateTexture(nil, "BACKGROUND")
+        scrollFrame.content.ClassFrames[i]:Show()
         scrollFrame.content.ClassFrames[i]:SetSize(_ICON_SIZE, _ICON_SIZE)
         scrollFrame.content.ClassFrames[i]:SetPoint("TOPLEFT", _PADDING, (_HEIGHT * -1 * (i-1)) - _HEIGHT)
         scrollFrame.content.ClassFrames[i]:SetTexture("Interface\\ICONS\\classicon_" .. char.Class.File)
         
         scrollFrame.content.CharNames[i] = scrollFrame.content.CharNames[i] or scrollFrame.content:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+        scrollFrame.content.CharNames[i]:Show()
         scrollFrame.content.CharNames[i]:SetPoint("LEFT", scrollFrame.content.ClassFrames[i], "LEFT", _ICON_SIZE + _ICON_PADDING, 0)
         scrollFrame.content.CharNames[i]:SetText(char.Name)
         local cr, cg, cb, web = GetClassColor(char.Class.File)
@@ -62,6 +65,7 @@ function AltinatorAttunementFrame:Initialize(self)
 
         for j, attunement in ipairs(C["Attunements"]) do
             scrollFrame.content["item" .. i .. "i" .. j] = scrollFrame.content["item" .. i .. "i" .. j] or CreateFrame("Frame", nil, scrollFrame.content)
+            scrollFrame.content["item" .. i .. "i" .. j]:Show()
             scrollFrame.content["item" .. i .. "i" .. j]:SetSize(_ICON_SIZE, _ICON_SIZE)
             scrollFrame.content["item" .. i .. "i" .. j]:SetPoint("LEFT", scrollFrame.content.ClassFrames[i], "LEFT", ((j+1)*(_ICON_SIZE+_ICON_PADDING))+96, 0)
 
