@@ -15,6 +15,18 @@ AltinatorNS.AltinatorCache = {}
 local AltinatorAddon = LibStub("AceAddon-3.0"):NewAddon(AddonName, "AceEvent-3.0", "AceTimer-3.0")
 AltinatorNS.AltinatorAddon = AltinatorAddon
 
+local pendingTimers = {}
+-- (re)starts a timer for key, so a burst of events results in a single call
+local function ScheduleOnce(key, func, delay)
+   if pendingTimers[key] then
+      AltinatorAddon:CancelTimer(pendingTimers[key])
+   end
+   pendingTimers[key] = AltinatorAddon:ScheduleTimer(function()
+      pendingTimers[key] = nil
+      func()
+   end, delay)
+end
+
 SLASH_ALTINATOR1, SLASH_ALTINATOR2 = "/alt", "/altinator"
 
 SlashCmdList.ALTINATOR = function(msg, editBox)
@@ -60,6 +72,8 @@ function AltinatorAddon:OnInitialize()
    self:RegisterEvent("TRADE_SKILL_SHOW")
    self:RegisterEvent("TRADE_SKILL_UPDATE")
    self:RegisterEvent("CRAFT_UPDATE")
+   self:RegisterEvent("CHAT_MSG_SKILL")
+   self:RegisterEvent("SKILL_LINES_CHANGED")
    self:RegisterEvent("BANKFRAME_OPENED")
    self:RegisterEvent("UNIT_SPELLCAST_START")
    self:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
@@ -68,9 +82,6 @@ function AltinatorAddon:OnInitialize()
    AltinatorNS.AltinatorOptions:Initialize()
    RequestTimePlayed()
    AltinatorNS.AltinatorGameTooltip:Initialize()
-   hooksecurefunc("DoTradeSkill", function()
-			AltinatorNS.AltinatorCache.updateCooldowns = true
-	end)
 end
 
 function AltinatorAddon:OnDisable()
@@ -86,6 +97,8 @@ function AltinatorAddon:OnDisable()
    self:UnregisterEvent("TRADE_SKILL_SHOW")
    self:UnregisterEvent("TRADE_SKILL_UPDATE")
    self:UnregisterEvent("CRAFT_UPDATE")
+   self:UnregisterEvent("CHAT_MSG_SKILL")
+   self:UnregisterEvent("SKILL_LINES_CHANGED")
    self:UnregisterEvent("BANKFRAME_OPENED")
    self:UnregisterEvent("UNIT_SPELLCAST_START")
    self:UnregisterEvent("UNIT_SPELLCAST_INTERRUPTED")
@@ -142,15 +155,21 @@ function AltinatorAddon:PLAYER_GUILD_UPDATE()
 end
 
 function AltinatorAddon:TRADE_SKILL_SHOW()
-   AltinatorAddon:ScheduleTimer(AltinatorNS.AltinatorData.ScanTradeSkills, 0.5)	
+   ScheduleOnce("tradeSkills", AltinatorNS.AltinatorData.ScanTradeSkills, 0.5)
 end
 
+-- TRADE_SKILL_UPDATE fires in bursts (crafting, bag changes, filtering), so rescan once things settle
+-- this picks up skill ups (recipe colors) and cooldowns started by crafting
 function AltinatorAddon:TRADE_SKILL_UPDATE()
-	if AltinatorNS.AltinatorCache.updateCooldowns then
-		AltinatorNS.AltinatorData:ScanCooldowns()
-		AltinatorNS.AltinatorCache.updateCooldowns = false
-	end	
-   
+   ScheduleOnce("tradeSkills", AltinatorNS.AltinatorData.ScanTradeSkills, 0.5)
+end
+
+function AltinatorAddon:CHAT_MSG_SKILL()
+   ScheduleOnce("professions", AltinatorNS.AltinatorData.SavePlayerProfessions, 0.5)
+end
+
+function AltinatorAddon:SKILL_LINES_CHANGED()
+   ScheduleOnce("professions", AltinatorNS.AltinatorData.SavePlayerProfessions, 0.5)
 end
 
 function AltinatorAddon:CRAFT_UPDATE()

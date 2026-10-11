@@ -89,43 +89,7 @@ function AltinatorData:SavePlayerDataLogin()
    data.XP.Needed=UnitXPMax("player")
    data.XP.Rested=GetXPExhaustion()
 
-   data.Professions = data.Professions or {}
-   data.ProfessionsSecondairy = data.ProfessionsSecondairy or {}
-   local profNames_rev = tInvert(L["ProfessionIDs"])
-   local skillsFound = 0
-   local knownProfs = {}
-   for i = 1, GetNumSkillLines() do
-    local name, _, _, skillRank, _, _, skillMaxRank = GetSkillLineInfo(i)
-    if profNames_rev[name] then
-      local profId=profNames_rev[name]
-      skillsFound = skillsFound + 1
-      if C["SecondairyProfession"][profId] then
-         data.ProfessionsSecondairy[profId] = data.ProfessionsSecondairy[profId] or {}
-         data.ProfessionsSecondairy[profId].Name=name
-         data.ProfessionsSecondairy[profId].File=C["ProfessionIcons"][profNames_rev[name]]
-         data.ProfessionsSecondairy[profId].Skill=skillRank
-         data.ProfessionsSecondairy[profId].SkillMax=skillMaxRank
-         data.ProfessionsSecondairy[profId].Spells= data.ProfessionsSecondairy[profId].Spells or {}
-         data.ProfessionsSecondairy[profId].Items= data.ProfessionsSecondairy[profId].Items or {}
-      else
-         table.insert(knownProfs, profId)
-         data.Professions[profId] = data.Professions[profId] or {}
-         data.Professions[profId].Name=name
-         data.Professions[profId].File=C["ProfessionIcons"][profNames_rev[name]]
-         data.Professions[profId].Skill=skillRank
-         data.Professions[profId].SkillMax=skillMaxRank
-         data.Professions[profId].Spells= data.Professions[profId].Spells or {}
-         data.Professions[profId].Items= data.Professions[profId].Items or {}
-      end
-    end
-   end
-
-   -- in case a profession was unlearned, remove it from the data
-   for profId, _ in pairs(data.Professions) do
-      if not tContains(knownProfs, profId) then
-         data.Professions[profId] = nil
-      end
-   end
+   AltinatorData:SavePlayerProfessions()
 
    data.Mail = data.Mail or {}
    for i=#data.Mail,1,-1 do
@@ -182,6 +146,59 @@ function AltinatorData:SavePlayerDataLogin()
       end
    end
 end
+
+function AltinatorData:SavePlayerProfessions()
+   local data = AltinatorNS.AltinatorAddon.CurrentCharacter
+   -- skill events can fire before login data is set up
+   if not data.FullName then
+      return
+   end
+   data.Professions = data.Professions or {}
+   data.ProfessionsSecondairy = data.ProfessionsSecondairy or {}
+   local profNames_rev = tInvert(L["ProfessionIDs"])
+   local skillsFound = 0
+   local knownProfs = {}
+   local allExpanded = true
+   for i = 1, GetNumSkillLines() do
+    local name, isHeader, isExpanded, skillRank, _, _, skillMaxRank = GetSkillLineInfo(i)
+    if isHeader and not isExpanded then
+      allExpanded = false
+    end
+    if profNames_rev[name] then
+      local profId=profNames_rev[name]
+      skillsFound = skillsFound + 1
+      if C["SecondairyProfession"][profId] then
+         data.ProfessionsSecondairy[profId] = data.ProfessionsSecondairy[profId] or {}
+         data.ProfessionsSecondairy[profId].Name=name
+         data.ProfessionsSecondairy[profId].File=C["ProfessionIcons"][profNames_rev[name]]
+         data.ProfessionsSecondairy[profId].Skill=skillRank
+         data.ProfessionsSecondairy[profId].SkillMax=skillMaxRank
+         data.ProfessionsSecondairy[profId].Spells= data.ProfessionsSecondairy[profId].Spells or {}
+         data.ProfessionsSecondairy[profId].Items= data.ProfessionsSecondairy[profId].Items or {}
+      else
+         table.insert(knownProfs, profId)
+         data.Professions[profId] = data.Professions[profId] or {}
+         data.Professions[profId].Name=name
+         data.Professions[profId].File=C["ProfessionIcons"][profNames_rev[name]]
+         data.Professions[profId].Skill=skillRank
+         data.Professions[profId].SkillMax=skillMaxRank
+         data.Professions[profId].Spells= data.Professions[profId].Spells or {}
+         data.Professions[profId].Items= data.Professions[profId].Items or {}
+      end
+    end
+   end
+
+   -- in case a profession was unlearned, remove it from the data
+   -- collapsed skill headers hide their professions, so only prune when everything is visible
+   if allExpanded then
+      for profId, _ in pairs(data.Professions) do
+         if not tContains(knownProfs, profId) then
+            data.Professions[profId] = nil
+         end
+      end
+   end
+end
+
 function AltinatorData:ScanBank()
    local data = AltinatorNS.AltinatorAddon.CurrentCharacter
    local bankSlots = {
@@ -351,41 +368,6 @@ function AltinatorData:ScanTradeSkills()
                   Cooldown = cooldown or 0,
                   CooldownEndTime = (cooldown and cooldown>0) and (time() + cooldown) or 0
                }
-            end
-         end
-      end
-   end
-end
-
-function AltinatorData:ScanCooldowns()
-	local tradeskillName = GetTradeSkillLine()
-
-   local profNames_rev = tInvert(L["ProfessionIDs"])
-   local profId = 0
-   if profNames_rev[tradeskillName] then
-      profId=profNames_rev[tradeskillName]
-      profession = AltinatorNS.AltinatorData:GetCharacterProfession(AltinatorNS.AltinatorAddon.CurrentCharacter, profId)
-
-      for i = 1, GetNumTradeSkills() do
-         local skillName, skillType = GetTradeSkillInfo(i)
-         if skillType ~= "header" then
-            local cooldown = GetTradeSkillCooldown(i)
-            if cooldown then
-               link = GetTradeSkillItemLink(i)
-               if link  then
-                  itemID = tonumber(link:match("item:(%d+)"))
-                  if itemID then
-                     if profession then
-                        profession.Items = profession.Items or {}
-                        profession.Items[itemID] = {
-                           Name = skillName,
-                           SkillType = skillType,
-                           Cooldown = cooldown or 0,
-                           CooldownEndTime = (cooldown and cooldown>0) and (time() + cooldown) or 0
-                        }
-                     end
-                  end
-               end
             end
          end
       end
